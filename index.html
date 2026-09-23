@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MMFI Farm Production — Forecast vs Actual</title>
+<title>Farm Production — Forecast vs Actual | M. Montesclaros Farms</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
@@ -81,6 +81,20 @@ td.info{color:var(--muted);font-style:italic}
 .legendnote{font-size:12px;color:var(--muted);margin-top:8px}
 footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
 .hidden{display:none}
+.mast{background:#0F0F0F;color:#fff;border-bottom:4px solid #8DB600;padding:calc(22px + env(safe-area-inset-top,0px)) 0 20px;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
+.mast .in{max-width:1280px;margin:0 auto;padding:0 clamp(14px,3vw,32px);display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px}
+.mast .kicker{font-family:"Libre Baskerville",Georgia,serif;font-size:12px;letter-spacing:.22em;color:#8DB600;margin:0 0 6px}
+.mast h1{font-family:"Libre Baskerville",Georgia,serif;font-size:clamp(24px,3.4vw,32px);font-weight:700;letter-spacing:0;color:#fff;margin:0;line-height:1.15}
+.mast .msub{font-family:"Libre Baskerville",Georgia,serif;color:#D0D0D0;font-size:14px;margin-top:6px}
+.mast .live{font-size:13px;color:#BDBDBD;margin-top:10px}
+.mast .dot{background:#777}.mast .dot.on{background:#8DB600;box-shadow:0 0 0 3px rgba(141,182,0,.25)}.mast .dot.err{background:#E0574C}
+.refresh{font-family:"Libre Baskerville",Georgia,serif;font-size:13.5px;font-weight:700;color:#0F0F0F;background:#8DB600;border:1px solid #8DB600;border-radius:0;padding:9px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.refresh:hover{background:#A3CC14;border-color:#A3CC14}
+.refresh:disabled{opacity:.6;cursor:progress}
+.refresh svg{width:15px;height:15px}
+.refresh.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.refresh.spin svg{animation:none}}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--fc);margin-right:4px;vertical-align:1px}
 .dot.on{background:var(--ok);box-shadow:0 0 0 3px var(--okbg)}.dot.err{background:var(--bad)}
 .skel .big,.skel .val{opacity:.35}
@@ -89,21 +103,21 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 </style>
 </head>
 <body>
-<div class="wrap">
-<header class="top">
+<header class="mast"><div class="in">
   <div>
-    <h1>Farm production: Forecast vs Actual</h1>
-    <div class="sub" id="sub">M. Montesclaros Farms Breeder Farms, weekly total eggs (TEP) and hatching eggs (HE)</div>
-    <div class="sub" id="live" aria-live="polite"><span class="dot"></span> Connecting to Google Sheet…</div>
+    <p class="kicker">M. MONTESCLAROS FARMS INC. — SAYRE HIGHWAY, HAGKOL</p>
+    <h1>Farm Production: Forecast vs Actual</h1>
+    <div class="msub">Total eggs (TEP) · Hatching eggs (HE) · HE recovery vs standard — per farm and cycle</div>
+    <div class="live" id="live" aria-live="polite"><span class="dot"></span> Connecting to Google Sheet…</div>
   </div>
-</header>
-
+  <button id="load" class="refresh" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>Refresh data</span></button>
+</div></header>
+<div class="wrap">
 <div class="filters" role="group" aria-label="Filters">
   <div class="field"><label for="farm">Farm</label><select id="farm"></select></div>
   <div class="field"><label for="cycle">Cycle</label><select id="cycle"></select></div>
   <div class="actions">
     <button id="reset" type="button">Show all farms</button>
-    <button id="load" type="button">Refresh now</button>
   </div>
   <div class="note" id="note"></div>
 </div>
@@ -161,13 +175,12 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 <script>
 /* ===================== SETTINGS — edit these ===================== */
 window.MMFI_CONFIG = {
-  // Published-to-web CSV links, one per farm tab. The first tab works with the link as-is.
-  // For every other tab: in the Google Sheet open the tab, copy the number after "#gid=" in the address bar,
-  // and add a line like  "...pub?gid=123456789&single=true&output=csv".
+  // Your sheet's "Publish to web" link (the part before "?").
+  PUBLISHED_BASE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbE_0TKpMmSjDG83KU6e1i56rN5Ba6EJSkkdsx3HX3xEULHhxCx7C7U-uP6N90lwjNsO7icZagXk26/pub",
+  // Leave empty to load only the first tab. To load more tabs, list each tab's gid number:
+  // open the tab in Google Sheets and copy the number after "gid=" in the address bar, e.g. 514722490.
+  TAB_GIDS: [],
   // (Not needed when this page runs as a Google Apps Script web app — it then reads every tab directly.)
-  CSV_URLS: [
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfVVnX3Fnrd_uSrurgSrUqJ99KV2oS9bbNl20SQQVfQQ1yEIybtBENxFUfDRdJA/pub?output=csv"
-  ],
   HE_STANDARD: 0.945,          // HE recovery standard (HE ÷ TEP)
   HE_WATCH_GAP: 0.02,          // amber when within 2 points below the standard
   TARGET_GREEN: 0.98,          // attainment bands for TEP / HE volume
@@ -271,7 +284,9 @@ function loadAppsScript(){return new Promise((res,rej)=>{google.script.run.withS
 async function loadCsv(){
   if(typeof Papa==='undefined')throw new Error('The CSV reader did not load. Check the internet connection.');
   const out=[];
-  await Promise.all(CFG.CSV_URLS.map(async(u,i)=>{
+  const B=CFG.PUBLISHED_BASE,G=[...new Set((CFG.TAB_GIDS||[]).map(String))];
+  const urls=G.length?G.map(g=>`${B}?gid=${g}&single=true&output=csv`):[`${B}?output=csv`];
+  await Promise.all(urls.map(async(u,i)=>{
     const url=u+(u.includes('?')?'&':'?')+'t='+Date.now();
     const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`Sheet link ${i+1} returned ${r.status}. Check it is still published to the web.`);
     const txt=await r.text();if(/^\s*</.test(txt))throw new Error(`Sheet link ${i+1} returned a web page, not CSV. Use the "Comma-separated values (.csv)" publish option.`);
@@ -281,7 +296,7 @@ async function loadCsv(){
 }
 let loading=false,lastOk=null;
 async function refresh(){
-  if(loading)return;loading=true;$('load').disabled=true;$('load').textContent='Refreshing…';
+  if(loading)return;loading=true;$('load').disabled=true;$('load').classList.add('spin');$('load').querySelector('span').textContent='Refreshing…';
   try{
     const tabs=inAppsScript()?await loadAppsScript():await loadCsv();
     const skip=new Set((CFG.SKIP_TABS||[]).map(x=>x.toUpperCase()));
@@ -294,7 +309,7 @@ async function refresh(){
     $('lead').classList.remove('skel');buildFilters();render();foot();
   }catch(err){
     $('live').innerHTML=`<span class="dot err"></span> ${esc(err.message)}${lastOk?` Showing data from ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}.`:''}`;
-  }finally{loading=false;$('load').disabled=false;$('load').textContent='Refresh now';}
+  }finally{loading=false;$('load').disabled=false;$('load').classList.remove('spin');$('load').querySelector('span').textContent='Refresh data';}
 }
 
 /* ---------- filters ---------- */
