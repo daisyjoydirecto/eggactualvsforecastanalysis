@@ -177,7 +177,7 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 window.MMFI_CONFIG = {
   // RECOMMENDED for GitHub Pages: paste your Apps Script Web app URL (ends in /exec) here.
   // When set, every farm tab is read automatically and PUBLISHED_BASE / TAB_GIDS below are ignored.
-  APPS_SCRIPT_URL: "",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwoF2EH77cvxlXF5rBW_d8vu1HhrMr92SLMNZt6tlABrpOvl4tq1kgZL0Awq3-sp4Vp/exec",
   // Fallback: your sheet's "Publish to web" link (the part before "?").
   PUBLISHED_BASE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbE_0TKpMmSjDG83KU6e1i56rN5Ba6EJSkkdsx3HX3xEULHhxCx7C7U-uP6N90lwjNsO7icZagXk26/pub",
   // Leave empty to load only the first tab. To load more tabs, list each tab's gid number:
@@ -318,6 +318,9 @@ async function refresh(){
     DATA=build(parsed,skipped);lastOk=new Date();
     $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet: ${DATA.cycles.length} tab${DATA.cycles.length===1?'':'s'}, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
     $('lead').classList.remove('skel');buildFilters();render();foot();
+    if(!inAppsScript()&&!CFG.APPS_SCRIPT_URL&&!(CFG.TAB_GIDS||[]).length){
+      $('live').innerHTML+=` <b style="color:#E8B53A">Only the first tab is loaded.</b> To load every farm and cycle, paste your Apps Script /exec link into APPS_SCRIPT_URL at the top of this file.`;
+    }
   }catch(err){
     $('live').innerHTML=`<span class="dot err"></span> ${esc(err.message)}${lastOk?` Showing data from ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}.`:''}`;
   }finally{loading=false;$('load').disabled=false;$('load').classList.remove('spin');$('load').querySelector('span').textContent='Refresh data';}
