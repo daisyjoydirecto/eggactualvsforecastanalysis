@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MMFI Farm Production — Forecast vs Actual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF1EC;--panel:#FFFFFF;--ink:#1C2A26;--muted:#5E6E68;--line:#D9E0DA;
+  --fc:#A9B6B0;--ac:#2F6B4F;--yolk:#D9A21B;--he:#7FB79A;--hef:#C7DCCF;
+  --ok:#2E7D4F;--okbg:#E1F1E6;--warn:#9A6512;--warnbg:#FBF0D6;--bad:#B23A2E;--badbg:#F8E2DF;
+  --focus:#D9A21B;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121A17;--panel:#1A2420;--ink:#E6EEE9;--muted:#98A8A1;--line:#2C3934;
+  --fc:#5F6F68;--ac:#6FC196;--yolk:#E8B53A;--he:#4E8C6C;--hef:#34493F;
+  --ok:#7FD3A1;--okbg:#1F3A2C;--warn:#F0C66B;--warnbg:#3A3020;--bad:#F29488;--badbg:#3F2421;}}
+:root[data-theme="dark"]{
+  --bg:#121A17;--panel:#1A2420;--ink:#E6EEE9;--muted:#98A8A1;--line:#2C3934;
+  --fc:#5F6F68;--ac:#6FC196;--yolk:#E8B53A;--he:#4E8C6C;--hef:#34493F;
+  --ok:#7FD3A1;--okbg:#1F3A2C;--warn:#F0C66B;--warnbg:#3A3020;--bad:#F29488;--badbg:#3F2421;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding:20px clamp(14px,3vw,32px) 48px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
+h1{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 12px;margin-bottom:6px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:140px;flex:1 1 150px;max-width:320px}
+.field label{font-size:13px;font-weight:600;color:var(--muted)}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 55%,calc(100% - 12px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+button{cursor:pointer;font-weight:600}
+button:hover{border-color:var(--ac)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.note{font-size:13px;color:var(--muted);width:100%}
+.note.warn{color:var(--bad);font-weight:600}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;margin:18px 0 22px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.lead .big{font-size:clamp(44px,7vw,76px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.lead .big small{font-size:.38em;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:6px}
+.lead p{margin:8px 0 0;color:var(--muted);max-width:60ch}
+.status{display:inline-block;font-weight:700;font-size:13px;border-radius:999px;padding:3px 10px}
+.s-ok{color:var(--ok);background:var(--okbg)}.s-warn{color:var(--warn);background:var(--warnbg)}.s-bad{color:var(--bad);background:var(--badbg)}.s-none{color:var(--muted);background:var(--bg)}
+/* bullet KPI */
+.kpis{display:grid;gap:16px}
+.kpi h3{margin:0;font-size:14px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.kpi .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px}
+.kpi .val{font-size:26px;font-weight:700;letter-spacing:-.01em}
+.kpi .vs{color:var(--muted);font-size:14px}
+.kpi .var{font-size:14px;font-weight:600}
+.pos{color:var(--ok)}.neg{color:var(--bad)}
+.bullet{position:relative;height:12px;margin-top:8px;border-radius:3px;background:linear-gradient(90deg,var(--badbg) 0 60%,var(--warnbg) 60% 65.33%,var(--okbg) 65.33% 100%)}
+.bullet .bar{position:absolute;left:0;top:3px;height:6px;border-radius:2px;background:var(--ac);transition:width .5s ease}
+.bullet .tgt{position:absolute;top:-3px;width:2px;height:18px;background:var(--ink);left:66.67%}
+.bullet-scale{position:relative;height:14px;font-size:11px;color:var(--muted);margin-top:3px}.bullet-scale span{position:absolute;transform:translateX(-50%)}.bullet-scale span:first-child{transform:none}.bullet-scale span:last-child{transform:translateX(-100%)}
+/* sections */
+section{margin-top:26px}
+section>h2{font-size:19px;font-weight:700;margin:0 0 4px;letter-spacing:-.01em}
+section>.desc{color:var(--muted);font-size:14px;margin:0 0 12px;max-width:75ch}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.chartbox{position:relative;height:340px}
+.chartbox.tall{height:420px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:10px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:13px;font-weight:600;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+tbody tr.click{cursor:pointer}
+tbody tr.click:hover td{background:var(--bg)}
+td.info{color:var(--muted);font-style:italic}
+.legendnote{font-size:12px;color:var(--muted);margin-top:8px}
+footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
+.hidden{display:none}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--fc);margin-right:4px;vertical-align:1px}
+.dot.on{background:var(--ok);box-shadow:0 0 0 3px var(--okbg)}.dot.err{background:var(--bad)}
+.skel .big,.skel .val{opacity:.35}
+@media (max-width:900px){.hero,.grid2{grid-template-columns:1fr}.chartbox{height:300px}.chartbox.tall{height:360px}.actions{margin-left:0}}
+@media (prefers-reduced-motion:reduce){.bullet .bar{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>Farm production: forecast vs actual</h1>
+    <div class="sub" id="sub">M. Montesclaros Farms breeder flocks, weekly total eggs (TEP) and hatching eggs (HE)</div>
+    <div class="sub" id="live" aria-live="polite"><span class="dot"></span> Connecting to Google Sheet…</div>
+  </div>
+</header>
+
+<div class="filters" role="group" aria-label="Filters">
+  <div class="field"><label for="farm">Farm</label><select id="farm"></select></div>
+  <div class="field"><label for="cycle">Cycle</label><select id="cycle"></select></div>
+  <div class="actions">
+    <button id="reset" type="button">Show all farms</button>
+    <button id="load" type="button">Refresh now</button>
+  </div>
+  <div class="note" id="note"></div>
+</div>
+
+<div class="hero">
+  <div class="panel lead skel" id="lead">
+    <div class="sub" style="margin:0 0 6px">Total eggs (TEP) vs forecast, matched weeks</div>
+    <div class="big" id="heroVal">–</div>
+    <p id="heroText"></p>
+    <div style="margin-top:12px" id="heroStatus"></div>
+  </div>
+  <div class="panel kpis" id="kpis"></div>
+</div>
+
+<section>
+  <h2>Monthly trend</h2>
+  <p class="desc">Forecast and actual total eggs per month (bars) with variance % (line, right axis). Weeks are counted in the month they start.</p>
+  <div class="panel"><div class="chartbox"><canvas id="cTrend" aria-label="Monthly forecast vs actual TEP"></canvas></div></div>
+</section>
+
+<section class="grid2">
+  <div>
+    <h2>Farms ranked by attainment</h2>
+    <p class="desc">TEP actual ÷ forecast for each farm. The dark line marks the 98% target. Click a bar to open that farm.</p>
+    <div class="panel"><div class="chartbox tall"><canvas id="cRank" aria-label="Farm ranking"></canvas></div></div>
+  </div>
+  <div>
+    <h2>Production curve</h2>
+    <p class="desc">Eggs per flock at each production week. With several cycles selected this is the average flock.</p>
+    <div class="panel"><div class="chartbox tall"><canvas id="cCurve" aria-label="Production curve"></canvas></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>HE recovery vs standard</h2>
+  <p class="desc">Hatching eggs as a share of total eggs, by production week (average across the cycles in view). The dark line is the <span id="stdTxt">94.5%</span> standard.</p>
+  <div class="panel"><div class="chartbox"><canvas id="cRec" aria-label="HE recovery by week vs standard"></canvas></div></div>
+</section>
+
+<section>
+  <h2>Metric breakdown</h2>
+  <p class="desc">Variance = Actual − Forecast. % variance = (Actual − Forecast) ÷ Forecast. <span id="bandTxt"></span></p>
+  <div class="tablewrap"><table id="tBreak"><thead><tr><th>Metric</th><th>Forecast / standard</th><th>Actual</th><th>Variance</th><th>% variance</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section>
+  <h2>Cycles in view</h2>
+  <p class="desc">One row per sheet tab. Click a row to open that cycle.</p>
+  <div class="tablewrap"><table id="tCyc"><thead><tr><th>Cycle (sheet title)</th><th>Breed</th><th>Status</th><th>Started</th><th>Weeks</th><th>TEP actual</th><th>TEP attainment</th><th>HE attainment</th><th>HE recovery</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<footer id="foot"></footer>
+</div>
+
+<script>
+/* ===================== SETTINGS — edit these ===================== */
+window.MMFI_CONFIG = {
+  // Published-to-web CSV links, one per farm tab. The first tab works with the link as-is.
+  // For every other tab: in the Google Sheet open the tab, copy the number after "#gid=" in the address bar,
+  // and add a line like  "...pub?gid=123456789&single=true&output=csv".
+  // (Not needed when this page runs as a Google Apps Script web app — it then reads every tab directly.)
+  CSV_URLS: [
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRRfVVnX3Fnrd_uSrurgSrUqJ99KV2oS9bbNl20SQQVfQQ1yEIybtBENxFUfDRdJA/pub?output=csv"
+  ],
+  HE_STANDARD: 0.945,          // HE recovery standard (HE ÷ TEP)
+  HE_WATCH_GAP: 0.02,          // amber when within 2 points below the standard
+  TARGET_GREEN: 0.98,          // attainment bands for TEP / HE volume
+  TARGET_YELLOW: 0.90,
+  ACTIVE_WITHIN_DAYS: 14,      // a cycle is Active if it has actuals within this many days of the latest data
+  REFRESH_MINUTES: 10,         // auto-refresh interval
+  SKIP_TABS: ["MM1 ROSS", "GO1-C3", "MM1 DATABASE"],   // tab names to ignore (Apps Script mode)
+  FARM_ALIASES: { "REGO1": "REY GO 1", "REYGO 1": "REY GO 1", "REGO-1": "REY GO 1", "REY GO2": "REY GO 2", "GO2": "REY GO 2", "VIDAL-WAKAT": "WAKAT", "GALENZOGA": "GALENZOGA" }
+};
+</script>
+<script>
+(function(){
+const CFG=window.MMFI_CONFIG, HE_STD=CFG.HE_STANDARD, GREEN=CFG.TARGET_GREEN, YELLOW=CFG.TARGET_YELLOW;
+const DAY=86400000;
+let DATA={cycles:[],rows:[],asof:0,skipped:[]};
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n==null||isNaN(n)?'–':Math.round(n).toLocaleString('en-US');
+const fmtM=n=>n==null?'–':Math.abs(n)>=1e6?(n/1e6).toFixed(2)+'M':fmt(n);
+const pct=(n,d=1)=>n==null||!isFinite(n)?'–':(n*100).toFixed(d)+'%';
+const spct=n=>n==null||!isFinite(n)?'–':(n>0?'+':'')+(n*100).toFixed(1)+'%';
+const pts=n=>n==null||!isFinite(n)?'–':(n>0?'+':n<0?'−':'')+Math.abs(n*100).toFixed(1)+' pts';
+const snum=n=>(n>0?'+':n<0?'−':'')+fmt(Math.abs(n));
+const dstr=d=>d?new Date(d*DAY).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}):'–';
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const status=a=>a==null||!isFinite(a)?['No data','s-none']:a>=GREEN?['On target','s-ok']:a>=YELLOW?['Watch','s-warn']:['Critical','s-bad'];
+const recStatus=r=>r==null||!isFinite(r)?['No data','s-none']:r>=HE_STD-1e-9?['On standard','s-ok']:r>=HE_STD-CFG.HE_WATCH_GAP?['Watch','s-warn']:['Below standard','s-bad'];
+const chip=([s,c])=>`<span class="status ${c}">${s}</span>`;
+const badge=a=>chip(status(a)), rbadge=r=>chip(recStatus(r));
+let state={farm:'ALL',cycle:'ALL'};
+try{const s=JSON.parse(localStorage.getItem('mmfi-live-filter')||'null');if(s)state=s;}catch(e){}
+$('stdTxt').textContent=pct(HE_STD);
+$('bandTxt').textContent=`TEP and HE volume: green at ${pct(GREEN,0)} of forecast or better, amber from ${pct(YELLOW,0)}, red below. HE recovery: green at ${pct(HE_STD)} or better, amber within ${(CFG.HE_WATCH_GAP*100).toFixed(0)} points below, red below that.`;
+
+/* ---------- parsing a farm tab (CSV rows or Apps Script display values) ---------- */
+const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function toDay(v){
+  if(v==null)return null; if(v instanceof Date&&!isNaN(v))return Math.round(Date.UTC(v.getFullYear(),v.getMonth(),v.getDate())/DAY);
+  const t=String(v).trim(); if(!t)return null; let m;
+  if((m=t.match(/^(\d{1,2})[-\s/]([A-Za-z]{3})[A-Za-z]*[-\s/,]+(\d{2,4})$/))){const y=+m[3]<100?2000+ +m[3]:+m[3];const mo=MON[m[2].toLowerCase()];if(mo==null)return null;return Math.round(Date.UTC(y,mo,+m[1])/DAY);}
+  if((m=t.match(/^([A-Za-z]{3})[A-Za-z]*\s+(\d{1,2}),?\s+(\d{4})$/))){const mo=MON[m[1].toLowerCase()];return mo==null?null:Math.round(Date.UTC(+m[3],mo,+m[2])/DAY);}
+  if((m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)))return Math.round(Date.UTC(+m[1],+m[2]-1,+m[3])/DAY);
+  if((m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/))){const y=+m[3]<100?2000+ +m[3]:+m[3];return Math.round(Date.UTC(y,+m[1]-1,+m[2])/DAY);}
+  if(/^\d{5}(\.\d+)?$/.test(t))return Math.round(+t-25569);
+  return null;
+}
+function num(v){
+  if(v==null)return null; if(typeof v==='number')return isFinite(v)?v:null;
+  let t=String(v).trim(); if(!t||/^-+$/.test(t)||t.startsWith('#'))return null;
+  const neg=/^\(.*\)$/.test(t); t=t.replace(/[(),\s]/g,''); if(t==='-'||t==='')return null;
+  const n=Number(t); return isFinite(n)?(neg?-n:n):null;
+}
+function findCol(hdr,test,fallback){const i=hdr.findIndex(h=>test(h));return i>=0?i:fallback;}
+function parseTab(tabName,grid){
+  const h=grid.findIndex(r=>r&&String(r[0]||'').trim().toUpperCase()==='AGE FLOCK');
+  if(h<0)return {skip:`${tabName}: no AGE FLOCK header`};
+  let title='';for(let i=0;i<h&&!title;i++){const c=(grid[i]||[]).find(x=>String(x||'').trim());if(c)title=String(c).trim();}
+  title=title||tabName||'Untitled';
+  const hdr=grid[h].map(x=>String(x||'').replace(/\s+/g,' ').trim().toUpperCase());
+  const cF=findCol(hdr,x=>x.includes('FORECAST')&&(x.includes('TEP')||x.includes('TOTAL EGG')),3);
+  const cA=findCol(hdr,x=>x.includes('TOTAL EGGS PRODUCED')&&!x.includes('FORECAST'),4);
+  const cFH=findCol(hdr,x=>x.includes('FORECAST')&&x.includes('HE'),6);
+  const cAH=findCol(hdr,x=>x.includes('ACTUAL')&&x.includes('HATCHING'),7);
+  const weeks=[];
+  for(let i=h+1;i<grid.length;i++){
+    const r=grid[i]||[];const ws=toDay(r[1]);if(ws==null)continue;
+    const f=num(r[cF]),a=num(r[cA]),fh=num(r[cFH]),ah=num(r[cAH]);
+    if(f==null&&a==null&&fh==null&&ah==null)continue;
+    weeks.push({age:String(r[0]||'').trim(),ws,we:toDay(r[2])??ws+6,f:f>0?f:null,a,fh:fh>0?fh:null,ah});
+  }
+  if(!weeks.length)return {skip:`${title}: no weekly data yet`};
+  weeks.sort((x,y)=>x.ws-y.ws);
+  return {title,tabName,weeks};
+}
+function farmOf(title){
+  let t=title.toUpperCase().replace(/^CULLED\s*-?\s*/,'').replace(/\(.*?\)/g,'').replace(/\s*-?\s*\b(ROSS|COBB|HUBBARD)\b.*$/,'').replace(/\s+/g,' ').trim();
+  t=t.replace(/\s*-\s*$/,'');
+  const al=CFG.FARM_ALIASES||{};return al[t]||t;
+}
+const breedOf=t=>(t.toUpperCase().match(/ROSS|COBB|HUBBARD/)||['—'])[0].replace(/^./,c=>c).toLowerCase().replace(/^./,c=>c.toUpperCase());
+function build(tabs,skipped){
+  const cycles=[],rows=[];let asof=0;const seen={};
+  tabs.forEach(t=>{const la=t.weeks.filter(w=>w.a!=null);const endA=la.length?la[la.length-1].we:null;if(endA&&endA>asof)asof=endA;});
+  tabs.forEach(t=>{
+    const start=t.weeks[0].ws,la=t.weeks.filter(w=>w.a!=null),end=la.length?la[la.length-1].we:null;
+    let id=t.title;seen[id]=(seen[id]||0)+1;
+    const culled=/CULLED/i.test(t.tabName||'');
+    const active=!culled&&end!=null&&asof-end<=CFG.ACTIVE_WITHIN_DAYS;
+    cycles.push({farm:farmOf(t.title),id,breed:breedOf(t.title),status:active?'Active':'Completed',start,end,tab:t.tabName||''});
+    const ci=cycles.length-1;
+    t.weeks.forEach((w,k)=>{rows.push([ci,k+1,w.ws,0,w.f,w.a]);rows.push([ci,k+1,w.ws,1,w.fh,w.ah]);});
+  });
+  // make duplicate titles unique with the start month
+  const cnt={};cycles.forEach(c=>cnt[c.id]=(cnt[c.id]||0)+1);
+  cycles.forEach(c=>{if(cnt[c.id]>1)c.id+=` (${new Date(c.start*DAY).toLocaleDateString('en-US',{month:'short',year:'numeric',timeZone:'UTC'})})`;});
+  return {cycles,rows,asof,skipped};
+}
+/* ---------- loading ---------- */
+const inAppsScript=()=>typeof google!=='undefined'&&google.script&&google.script.run;
+function loadAppsScript(){return new Promise((res,rej)=>{google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e&&e.message||e))).getAllTabs();});}
+async function loadCsv(){
+  if(typeof Papa==='undefined')throw new Error('The CSV reader did not load. Check the internet connection.');
+  const out=[];
+  await Promise.all(CFG.CSV_URLS.map(async(u,i)=>{
+    const url=u+(u.includes('?')?'&':'?')+'t='+Date.now();
+    const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error(`Sheet link ${i+1} returned ${r.status}. Check it is still published to the web.`);
+    const txt=await r.text();if(/^\s*</.test(txt))throw new Error(`Sheet link ${i+1} returned a web page, not CSV. Use the "Comma-separated values (.csv)" publish option.`);
+    out[i]={name:'',values:Papa.parse(txt,{skipEmptyLines:false}).data};
+  }));
+  return out;
+}
+let loading=false,lastOk=null;
+async function refresh(){
+  if(loading)return;loading=true;$('load').disabled=true;$('load').textContent='Refreshing…';
+  try{
+    const tabs=inAppsScript()?await loadAppsScript():await loadCsv();
+    const skip=new Set((CFG.SKIP_TABS||[]).map(x=>x.toUpperCase()));
+    const parsed=[],skipped=[];
+    tabs.forEach(t=>{if(t.name&&skip.has(t.name.toUpperCase())){skipped.push(`${t.name}: in SKIP_TABS`);return;}
+      const p=parseTab(t.name,t.values);if(p.skip)skipped.push(p.skip);else parsed.push(p);});
+    if(!parsed.length)throw new Error('No farm tabs with weekly data were found.');
+    DATA=build(parsed,skipped);lastOk=new Date();
+    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet: ${DATA.cycles.length} tab${DATA.cycles.length===1?'':'s'}, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
+    $('lead').classList.remove('skel');buildFilters();render();foot();
+  }catch(err){
+    $('live').innerHTML=`<span class="dot err"></span> ${esc(err.message)}${lastOk?` Showing data from ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}.`:''}`;
+  }finally{loading=false;$('load').disabled=false;$('load').textContent='Refresh now';}
+}
+
+/* ---------- filters ---------- */
+function farms(){return [...new Set(DATA.cycles.map(c=>c.farm))].sort();}
+function buildFilters(){
+  const fs=$('farm');fs.innerHTML='<option value="ALL">All farms</option>'+farms().map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('');
+  if(![...fs.options].some(o=>o.value===state.farm))state.farm='ALL';fs.value=state.farm;buildCycles();
+}
+function buildCycles(){
+  const cs=$('cycle');
+  const list=DATA.cycles.filter(c=>state.farm==='ALL'||c.farm===state.farm).sort((a,b)=>b.start-a.start);
+  cs.innerHTML='<option value="ALL">All cycles</option><option value="ACTIVE">Active cycles only</option>'+
+    list.map(c=>`<option value="${esc(c.id)}">${esc(c.id)} (${c.status.toLowerCase()})</option>`).join('');
+  if(![...cs.options].some(o=>o.value===state.cycle))state.cycle='ALL';cs.value=state.cycle;
+}
+function inScope(c){
+  if(state.farm!=='ALL'&&c.farm!==state.farm)return false;
+  if(state.cycle==='ACTIVE')return c.status==='Active';
+  if(state.cycle!=='ALL')return c.id===state.cycle;
+  return true;
+}
+/* ---------- aggregation ---------- */
+function agg(rows){
+  const o={f:[0,0],a:[0,0],uf:0,ua:0,wkF:0,wkA:0,matched:0,peakF:0,peakA:0,recT:0,recH:0,recW:0};
+  const tep=new Map();
+  rows.forEach(r=>{const m=r[3],f=r[4],a=r[5];
+    if(m===0){if(f>0){o.wkF++;o.uf+=f;if(f>o.peakF)o.peakF=f;}if(a!=null){o.wkA++;o.ua+=a;if(a>o.peakA)o.peakA=a;tep.set(r[0]*1000+r[1],a);}}
+    if(f>0&&a!=null){o.f[m]+=f;o.a[m]+=a;if(m===0)o.matched++;}});
+  rows.forEach(r=>{if(r[3]===1&&r[5]!=null){const t=tep.get(r[0]*1000+r[1]);if(t>0){o.recT+=t;o.recH+=r[5];o.recW++;}}});
+  o.rec=o.recT?o.recH/o.recT:null;
+  return o;
+}
+let charts={};
+function render(){
+  try{localStorage.setItem('mmfi-live-filter',JSON.stringify(state));}catch(e){}
+  $('reset').disabled=state.farm==='ALL'&&state.cycle==='ALL';
+  const cyc=DATA.cycles.map((c,i)=>inScope(c)?i:-1).filter(i=>i>=0),cset=new Set(cyc);
+  const rows=DATA.rows.filter(r=>cset.has(r[0])),g=agg(rows);
+  const attT=g.f[0]?g.a[0]/g.f[0]:null,attH=g.f[1]?g.a[1]/g.f[1]:null;
+  const avgF=g.matched?g.f[0]/g.matched:null,avgA=g.matched?g.a[0]/g.matched:null;
+  const farmName=state.farm==='ALL'?'All farms':state.farm;
+  const cycName=state.cycle==='ALL'?'all cycles':state.cycle==='ACTIVE'?'active cycles':state.cycle;
+  $('note').className='note';
+  $('note').textContent=`${farmName}, ${cycName}: ${cyc.length} cycle${cyc.length===1?'':'s'}, ${g.matched.toLocaleString()} matched flock-weeks. Latest actuals up to ${dstr(DATA.asof)}.`;
+  $('heroVal').innerHTML=attT==null?'No data':`${pct(attT)}<small>of forecast</small>`;
+  $('heroText').textContent=attT==null?'No weeks in this selection have both a forecast and an actual.':
+    `${fmtM(g.a[0])} eggs produced against ${fmtM(g.f[0])} forecast, ${snum(g.a[0]-g.f[0])} eggs (${spct(attT-1)}).${g.ua-g.a[0]>0?' '+fmtM(g.ua-g.a[0])+' more eggs came in weeks with no forecast.':''}`;
+  $('heroStatus').innerHTML=badge(attT);
+  // KPI bullets: [name, actual, reference, formatter, ratio, badgeHtml, refLabel, varText]
+  const k=[
+    ['Hatching eggs',g.a[1],g.f[1],fmtM,attH,badge(attH),'forecast',g.f[1]?`${snum(g.a[1]-g.f[1])} (${spct(attH-1)})`:''],
+    ['HE recovery (HE ÷ TEP)',g.rec,HE_STD,v=>pct(v),g.rec==null?null:g.rec/HE_STD,rbadge(g.rec),'standard',g.rec==null?'':pts(g.rec-HE_STD)],
+    ['Avg eggs per flock-week',avgA,avgF,fmt,avgF?avgA/avgF:null,badge(avgF?avgA/avgF:null),'forecast',avgF?`${snum(avgA-avgF)} (${spct(avgA/avgF-1)})`:''],
+  ];
+  $('kpis').innerHTML=k.map(([n,a,f,fm,att,b,refl,vt])=>{
+    const w=att==null?0:Math.max(0,Math.min(1,att/1.5))*100;const cls=a!=null&&f&&a>=f?'pos':'neg';
+    return `<div class="kpi"><h3>${n} ${b}</h3>
+      <div class="row"><span class="val">${a==null?'–':fm(a)}</span><span class="vs">vs ${f==null?'–':fm(f)} ${refl}</span><span class="var ${cls}">${vt}</span></div>
+      <div class="bullet" role="img" aria-label="${pct(att)} of ${refl}"><div class="bar" style="width:${w}%"></div><div class="tgt" title="${refl} (100%)"></div></div>
+      <div class="bullet-scale"><span style="left:0">0%</span><span style="left:66.67%">100% of ${refl}</span><span style="left:100%">150%</span></div></div>`;}).join('');
+  // breakdown
+  const br=[
+    ['Total eggs produced (TEP)',g.f[0],g.a[0],'n',badge(attT)],['Hatching eggs (HE)',g.f[1],g.a[1],'n',badge(attH)],
+    [`HE recovery % (vs ${pct(HE_STD)} standard)`,HE_STD,g.rec,'p',rbadge(g.rec)],['Avg eggs per flock-week',avgF,avgA,'n',badge(avgF?avgA/avgF:null)],
+    ['Peak weekly TEP (single flock)',g.peakF,g.peakA,'n',badge(g.peakF?g.peakA/g.peakF:null)],['Production weeks (flock-weeks)',g.wkF,g.wkA,'n',badge(g.wkF?g.wkA/g.wkF:null)],
+    ['TEP incl. weeks with no forecast',g.uf,g.ua,'n','<span class="info">Info only</span>']];
+  $('tBreak').querySelector('tbody').innerHTML=br.map(([n,f,a,t,b])=>{
+    const ok=f&&a!=null,att=ok?a/f:null,v=ok?a-f:null;
+    return `<tr><td>${n}</td><td>${t==='p'?pct(f):fmt(f)}</td><td>${t==='p'?pct(a):fmt(a)}</td><td class="${v>=0?'pos':'neg'}">${ok?(t==='p'?pts(v):snum(v)):'–'}</td><td class="${att>=1?'pos':'neg'}">${spct(att==null?null:att-1)}</td><td>${b}</td></tr>`}).join('');
+  // cycles table
+  const byC=new Map();rows.forEach(r=>{if(!byC.has(r[0]))byC.set(r[0],[]);byC.get(r[0]).push(r);});
+  $('tCyc').querySelector('tbody').innerHTML=cyc.slice().sort((x,y)=>DATA.cycles[y].start-DATA.cycles[x].start).map(i=>{
+    const c=DATA.cycles[i],a=agg(byC.get(i)||[]),t=a.f[0]?a.a[0]/a.f[0]:null,h=a.f[1]?a.a[1]/a.f[1]:null;
+    return `<tr class="click" tabindex="0" data-i="${i}"><td>${esc(c.id)}</td><td>${c.breed}</td><td>${c.status}</td><td>${dstr(c.start)}</td><td>${a.wkA}</td><td>${fmt(a.ua)}</td><td>${pct(t)} ${badge(t)}</td><td>${pct(h)} ${badge(h)}</td><td>${pct(a.rec)} ${rbadge(a.rec)}</td></tr>`}).join('')||'<tr><td colspan="9">No cycles match. Choose another farm or cycle.</td></tr>';
+  // trend
+  const mon=new Map();
+  rows.forEach(r=>{if(r[3]!==0||!(r[4]>0)||r[5]==null)return;const d=new Date(r[2]*DAY),key=d.getUTCFullYear()*12+d.getUTCMonth();const o=mon.get(key)||{f:0,a:0};o.f+=r[4];o.a+=r[5];mon.set(key,o);});
+  let keys=[...mon.keys()].sort((a,b)=>a-b);if(keys.length){const all=[];for(let q=keys[0];q<=keys[keys.length-1];q++)all.push(q);keys=all;}
+  const mLab=keys.map(q=>new Date(Date.UTC(Math.floor(q/12),q%12,1)).toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'}));
+  const mF=keys.map(q=>mon.get(q)?mon.get(q).f:null),mA=keys.map(q=>mon.get(q)?mon.get(q).a:null),mV=keys.map((q,i)=>mF[i]?(mA[i]/mF[i]-1)*100:null);
+  // ranking by farm (ignores farm filter, honours Active)
+  const fr=new Map();
+  DATA.rows.forEach(r=>{const c=DATA.cycles[r[0]];if(r[3]!==0||!(r[4]>0)||r[5]==null)return;if(state.cycle==='ACTIVE'&&c.status!=='Active')return;const o=fr.get(c.farm)||{f:0,a:0};o.f+=r[4];o.a+=r[5];fr.set(c.farm,o);});
+  const rk=[...fr.entries()].map(([id,o])=>({id,v:o.a/o.f*100})).sort((a,b)=>b.v-a.v);
+  // curves
+  const W=Math.max(1,...rows.map(r=>r[1]));
+  const acc=[...Array(W+1)].map(()=>({s:[0,0,0,0],n:[0,0,0,0]}));
+  rows.forEach(r=>{const o=acc[r[1]],m=r[3];if(r[4]>0){o.s[m*2]+=r[4];o.n[m*2]++;}if(r[5]!=null){o.s[m*2+1]+=r[5];o.n[m*2+1]++;}});
+  const cv=j=>acc.slice(1).map(o=>o.n[j]?o.s[j]/o.n[j]:null);
+  // recovery by week (paired TEP & HE actuals)
+  const tepA=new Map();rows.forEach(r=>{if(r[3]===0&&r[5]>0)tepA.set(r[0]*1000+r[1],r[5]);});
+  const rw=[...Array(W+1)].map(()=>({t:0,h:0}));
+  rows.forEach(r=>{if(r[3]===1&&r[5]!=null){const t=tepA.get(r[0]*1000+r[1]);if(t){rw[r[1]].t+=t;rw[r[1]].h+=r[5];}}});
+  const rec=rw.slice(1).map(o=>o.t?o.h/o.t*100:null);
+  drawCharts({mLab,mF,mA,mV,rk,W,curve:[cv(0),cv(1),cv(2),cv(3)],rec});
+}
+function drawCharts(d){
+  if(typeof Chart==='undefined'){['cTrend','cRank','cCurve','cRec'].forEach(id=>{const el=$(id);if(el)el.parentNode.innerHTML='<p class="desc">Charts could not load. Check the internet connection and reload.</p>'});return;}
+  const ink=css('--ink'),muted=css('--muted'),line=css('--line');
+  Chart.defaults.font.family='Archivo, Helvetica Neue, Arial, sans-serif';Chart.defaults.color=muted;Chart.defaults.borderColor=line;
+  const upd=(id,cfg)=>{if(charts[id]){charts[id].destroy();}charts[id]=new Chart($(id),cfg);};
+  const kfmt=v=>v>=1e6?(v/1e6)+'M':v>=1e3?(v/1e3)+'k':v;
+  upd('cTrend',{data:{labels:d.mLab,datasets:[
+    {type:'line',label:'Variance %',data:d.mV,yAxisID:'y2',borderColor:css('--yolk'),backgroundColor:css('--yolk'),borderWidth:2.5,pointRadius:2.5,tension:.25,order:0},
+    {type:'bar',label:'Forecast TEP',data:d.mF,backgroundColor:css('--fc'),borderRadius:2,order:1},
+    {type:'bar',label:'Actual TEP',data:d.mA,backgroundColor:css('--ac'),borderRadius:2,order:1}]},
+    options:{animation:false,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.dataset.yAxisID==='y2'?(c.raw==null?'–':c.raw.toFixed(1)+'%'):fmt(c.raw)}`}}},
+      scales:{x:{grid:{display:false}},y:{ticks:{callback:kfmt}},y2:{position:'right',grid:{display:false},ticks:{callback:v=>v+'%'}}}}});
+  const vline=(val,axis)=>({id:'ref'+axis,afterDatasetsDraw(ch){const s=ch.scales[axis],{top,bottom,left,right}=ch.chartArea,c=ch.ctx;const p=s.getPixelForValue(val);c.save();c.strokeStyle=ink;c.lineWidth=2;c.setLineDash(axis==='y'?[5,4]:[]);c.beginPath();if(axis==='x'){c.moveTo(p,top);c.lineTo(p,bottom);}else{c.moveTo(left,p);c.lineTo(right,p);}c.stroke();c.restore();}});
+  upd('cRank',{type:'bar',data:{labels:d.rk.map(r=>r.id),datasets:[{label:'TEP attainment',data:d.rk.map(r=>r.v),
+      backgroundColor:d.rk.map(r=>r.id===state.farm?css('--yolk'):r.v>=GREEN*100?css('--ac'):r.v>=YELLOW*100?css('--warn'):css('--bad')),borderRadius:3,barPercentage:.75}]},
+    options:{animation:false,indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.toFixed(1)+'% of forecast'}}},
+      scales:{x:{min:Math.min(80,Math.floor(Math.min(...d.rk.map(r=>r.v),100)/10)*10),ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}},
+      onClick:(e,els)=>{if(els.length){state.farm=d.rk[els[0].index].id;state.cycle='ALL';buildFilters();render();}}},plugins:[vline(GREEN*100,'x')]});
+  const L=[...Array(d.W)].map((_,i)=>i+1);
+  upd('cCurve',{type:'line',data:{labels:L,datasets:[
+    {label:'Forecast TEP',data:d.curve[0],borderColor:css('--fc'),borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.3},
+    {label:'Actual TEP',data:d.curve[1],borderColor:css('--ac'),borderWidth:2.5,pointRadius:0,tension:.3},
+    {label:'Forecast HE',data:d.curve[2],borderColor:css('--hef'),borderDash:[6,4],borderWidth:2,pointRadius:0,tension:.3},
+    {label:'Actual HE',data:d.curve[3],borderColor:css('--he'),borderWidth:2.5,pointRadius:0,tension:.3}]},
+    options:{animation:false,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{title:t=>'Production week '+t[0].label,label:c=>`${c.dataset.label}: ${fmt(c.raw)}`}}},
+      scales:{x:{title:{display:true,text:'Production week'},ticks:{maxTicksLimit:12},grid:{display:false}},y:{ticks:{callback:kfmt}}}}});
+  const std=HE_STD*100;
+  upd('cRec',{type:'line',data:{labels:L,datasets:[{label:'Actual HE recovery',data:d.rec,borderColor:css('--ac'),backgroundColor:css('--ac'),borderWidth:2.5,pointRadius:2,tension:.25,
+      segment:{borderColor:c=>c.p1.parsed.y>=std-1e-9?css('--ac'):css('--bad')}}]},
+    options:{animation:false,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>'Production week '+t[0].label,label:c=>`HE recovery ${c.raw==null?'–':c.raw.toFixed(1)+'%'} (standard ${std.toFixed(1)}%)`}}},
+      scales:{x:{title:{display:true,text:'Production week'},ticks:{maxTicksLimit:14},grid:{display:false}},y:{suggestedMin:60,suggestedMax:100,ticks:{callback:v=>v+'%'}}}},plugins:[vline(std,'y')]});
+}
+function foot(){$('foot').textContent=`Source: ${inAppsScript()?'Google Sheet (read directly by Apps Script)':'Google Sheet published CSV'}. Cycle = the title at the top of each farm tab. Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
+// events
+$('farm').addEventListener('change',e=>{state.farm=e.target.value;state.cycle='ALL';buildCycles();render();});
+$('cycle').addEventListener('change',e=>{state.cycle=e.target.value;render();});
+$('reset').addEventListener('click',()=>{state={farm:'ALL',cycle:'ALL'};buildFilters();render();});
+const openRow=tr=>{if(!tr)return;const c=DATA.cycles[+tr.dataset.i];state.farm=c.farm;state.cycle=c.id;buildFilters();render();window.scrollTo({top:0,behavior:'smooth'});};
+$('tCyc').addEventListener('click',e=>openRow(e.target.closest('tr.click')));
+$('tCyc').addEventListener('keydown',e=>{if(e.key==='Enter')openRow(e.target.closest('tr.click'));});
+$('load').addEventListener('click',refresh);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>DATA.cycles.length&&render());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&lastOk&&Date.now()-lastOk>60000)refresh();});
+setInterval(()=>{if(!document.hidden)refresh();},CFG.REFRESH_MINUTES*60000);
+refresh();
+})();
+</script>
+</body>
+</html>
