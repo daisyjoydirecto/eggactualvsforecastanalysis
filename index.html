@@ -175,7 +175,10 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 <script>
 /* ===================== SETTINGS — edit these ===================== */
 window.MMFI_CONFIG = {
-  // Your sheet's "Publish to web" link (the part before "?").
+  // RECOMMENDED for GitHub Pages: paste your Apps Script Web app URL (ends in /exec) here.
+  // When set, every farm tab is read automatically and PUBLISHED_BASE / TAB_GIDS below are ignored.
+  APPS_SCRIPT_URL: "",
+  // Fallback: your sheet's "Publish to web" link (the part before "?").
   PUBLISHED_BASE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbE_0TKpMmSjDG83KU6e1i56rN5Ba6EJSkkdsx3HX3xEULHhxCx7C7U-uP6N90lwjNsO7icZagXk26/pub",
   // Leave empty to load only the first tab. To load more tabs, list each tab's gid number:
   // open the tab in Google Sheets and copy the number after "gid=" in the address bar, e.g. 514722490.
@@ -280,6 +283,14 @@ function build(tabs,skipped){
 }
 /* ---------- loading ---------- */
 const inAppsScript=()=>typeof google!=='undefined'&&google.script&&google.script.run;
+async function loadAppsScriptUrl(){
+  const u=CFG.APPS_SCRIPT_URL+(CFG.APPS_SCRIPT_URL.includes('?')?'&':'?')+'t='+Date.now();
+  let r;try{r=await fetch(u,{cache:'no-store'});}catch(e){throw new Error('Could not reach the Apps Script link. Check that "Who has access" is set to Anyone.');}
+  if(!r.ok)throw new Error(`Apps Script link returned ${r.status}.`);
+  const txt=await r.text();let j;try{j=JSON.parse(txt);}catch(e){throw new Error('Apps Script link did not return data. Deploy Code.gs as a Web app with access set to Anyone, then paste the /exec URL.');}
+  if(j.error)throw new Error('Apps Script error: '+j.error);
+  return j.tabs||j;
+}
 function loadAppsScript(){return new Promise((res,rej)=>{google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e&&e.message||e))).getAllTabs();});}
 async function loadCsv(){
   if(typeof Papa==='undefined')throw new Error('The CSV reader did not load. Check the internet connection.');
@@ -298,7 +309,7 @@ let loading=false,lastOk=null;
 async function refresh(){
   if(loading)return;loading=true;$('load').disabled=true;$('load').classList.add('spin');$('load').querySelector('span').textContent='Refreshing…';
   try{
-    const tabs=inAppsScript()?await loadAppsScript():await loadCsv();
+    const tabs=inAppsScript()?await loadAppsScript():(CFG.APPS_SCRIPT_URL?await loadAppsScriptUrl():await loadCsv());
     const skip=new Set((CFG.SKIP_TABS||[]).map(x=>x.toUpperCase()));
     const parsed=[],skipped=[];
     tabs.forEach(t=>{if(t.name&&skip.has(t.name.toUpperCase())){skipped.push(`${t.name}: in SKIP_TABS`);return;}
@@ -439,7 +450,7 @@ function drawCharts(d){
     options:{animation:false,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>'Production week '+t[0].label,label:c=>`HE recovery ${c.raw==null?'–':c.raw.toFixed(1)+'%'} (standard ${std.toFixed(1)}%)`}}},
       scales:{x:{title:{display:true,text:'Production week'},ticks:{maxTicksLimit:14},grid:{display:false}},y:{suggestedMin:60,suggestedMax:100,ticks:{callback:v=>v+'%'}}}},plugins:[vline(std,'y')]});
 }
-function foot(){$('foot').textContent=`Source: ${inAppsScript()?'Google Sheet (read directly by Apps Script)':'Google Sheet published CSV'}. Cycle = the title at the top of each farm tab. Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
+function foot(){$('foot').textContent=`Source: ${inAppsScript()||CFG.APPS_SCRIPT_URL?'Google Sheet (all tabs via Apps Script)':'Google Sheet published CSV'}. Cycle = the title at the top of each farm tab. Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
 // events
 $('farm').addEventListener('change',e=>{state.farm=e.target.value;state.cycle='ALL';buildCycles();render();});
 $('cycle').addEventListener('change',e=>{state.cycle=e.target.value;render();});
