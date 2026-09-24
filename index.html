@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Farm Production — Forecast vs Actual | M. Montesclaros Farms</title>
+<title>Farm Production — Forecast vs Actual | M. Montesclaros Farms Inc.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
@@ -221,8 +222,10 @@ window.MMFI_CONFIG = {
   // When set, every farm tab is read automatically and PUBLISHED_BASE / TAB_GIDS below are ignored.
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwwT6XYn6d83MWVzsUTGzoJExRCaK4MXLZZVKzl5CYdohOs3jT5C5n-u40RfyuJaqgW7g/exec",
   // Fallback: your sheet's "Publish to web" link (the part before "?").
-  PUBLISHED_BASE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbE_0TKpMmSjDG83KU6e1i56rN5Ba6EJSkkdsx3HX3xEULHhxCx7C7U-uP6N90lwjNsO7icZagXk26/pub",
-  // Leave empty to load only the first tab. To load more tabs, list each tab's gid number:
+  PUBLISHED_BASE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQYXWMaQ87iSDIqp73R_AA9KLbq11xQZCqFLHnhAzsSOr6v8FbxWZ3J0SXhW7Yj6laq0bqh7SAY0jQk/pub",
+  // Leave empty: the whole published workbook (every tab) is read in one go.
+  // Only if that fails, list tab gid numbers here to read tabs one by one as CSV.
+  // Old note: Leave empty to load only the first tab. To load more tabs, list each tab's gid number:
   // open the tab in Google Sheets and copy the number after "gid=" in the address bar, e.g. 514722490.
   TAB_GIDS: [],
   // (Not needed when this page runs as a Google Apps Script web app — it then reads every tab directly.)
@@ -391,6 +394,40 @@ async function loadAppsScriptUrl(){
   return j;
 }
 function loadAppsScript(){return new Promise((res,rej)=>{google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e&&e.message||e))).getAllTabs();});}
+/* whole published workbook (all tabs) via ?output=xlsx */
+function gridToObjects(g){
+  const hi=g.findIndex(r=>r&&r.some(v=>v!=null&&String(v).trim()!==''));if(hi<0)return [];
+  const head=g[hi].map(h=>h==null?'':String(h).trim());const out=[];
+  for(let i=hi+1;i<g.length;i++){const r=g[i]||[];const o={};let any=false;
+    head.forEach((h,j)=>{if(!h)return;let v=r[j];if(v instanceof Date)v=`${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+      if(v===''||v===undefined)v=null;if(v!=null)any=true;o[h]=v;});
+    if(any)out.push(o);}
+  return out;
+}
+function tablesToV2(named){ // named: [{name, grid}]
+  const pick=(nm,test)=>{const byName=named.find(t=>t.name.toLowerCase()===nm.toLowerCase());if(byName)return byName;return named.find(t=>{const h=(t.grid[0]||[]).map(x=>String(x||'').trim());return test(h);});};
+  const fl=pick('Flocks',h=>h.includes('Cycle_ID')&&(h.includes('Cycle_Name')||h.includes('Hens_Housed')));
+  const wl=pick('Weekly_Log',h=>h.includes('Cycle_ID')&&h.includes('TEP')&&!h.includes('Forecast_TEP'));
+  if(!fl||!wl)return null;
+  const fo=pick('Forecast',h=>h.includes('Forecast_TEP')),st=pick('Settings',h=>h.includes('Setting')&&h.includes('Value'));
+  return {schema:2,Flocks:gridToObjects(fl.grid),Weekly_Log:gridToObjects(wl.grid),Forecast:fo?gridToObjects(fo.grid):[],Settings:st?gridToObjects(st.grid):[]};
+}
+async function loadXlsx(){
+  if(typeof XLSX==='undefined')throw new Error('The spreadsheet reader did not load. Check the internet connection.');
+  const url=`${CFG.PUBLISHED_BASE}?output=xlsx&t=${Date.now()}`;
+  let r;try{r=await fetch(url,{cache:'no-store'});}catch(e){throw new Error('Could not download the published workbook (blocked by the browser).');}
+  if(!r.ok)throw new Error(`Published workbook returned ${r.status}. Check File → Share → Publish to web → Entire document.`);
+  const wb=XLSX.read(await r.arrayBuffer(),{cellDates:true});
+  const named=wb.SheetNames.map(n=>({name:n,grid:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:null})}));
+  const v2=tablesToV2(named);if(v2)return v2;
+  return named.map(t=>({name:t.name,values:t.grid.map(r=>r.map(v=>v==null?'':v))}));
+}
+async function loadPublished(){
+  if((CFG.TAB_GIDS||[]).length)return loadCsv();
+  try{return await loadXlsx();}
+  catch(e){console.warn(e);publishedFallback=e.message;return loadCsv();}
+}
+let publishedFallback='';
 async function loadCsv(){
   if(typeof Papa==='undefined')throw new Error('The CSV reader did not load. Check the internet connection.');
   const out=[];
@@ -402,13 +439,14 @@ async function loadCsv(){
     const txt=await r.text();if(/^\s*</.test(txt))throw new Error(`Sheet link ${i+1} returned a web page, not CSV. Use the "Comma-separated values (.csv)" publish option.`);
     out[i]={name:'',values:Papa.parse(txt,{skipEmptyLines:false}).data};
   }));
+  const v2=tablesToV2(out.map(t=>({name:t.name,grid:t.values})));if(v2)return v2;
   return out;
 }
 let loading=false,lastOk=null;
 async function refresh(){
   if(loading)return;loading=true;$('load').disabled=true;$('load').classList.add('spin');$('load').querySelector('span').textContent='Refreshing…';
   try{
-    let got=inAppsScript()?await loadAppsScript():(CFG.APPS_SCRIPT_URL?await loadAppsScriptUrl():await loadCsv());
+    publishedFallback='';let got=inAppsScript()?await loadAppsScript():(CFG.APPS_SCRIPT_URL?await loadAppsScriptUrl():await loadPublished());
     if(got&&got.schema===2){DATA=buildV2(got);}
     else{
       const tabs=Array.isArray(got)?got:(got.tabs||[]);
@@ -423,8 +461,8 @@ async function refresh(){
     $('health').classList.toggle('hidden',!DATA.extra);
     $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet${DATA.extra?' (baseline template)':''}: ${DATA.cycles.length} ${DATA.extra?'flock':'tab'}${DATA.cycles.length===1?'':'s'}, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
     $('lead').classList.remove('skel');buildFilters();render();foot();
-    if(!inAppsScript()&&!CFG.APPS_SCRIPT_URL&&!(CFG.TAB_GIDS||[]).length){
-      $('live').innerHTML+=` <b style="color:#E8B53A">Only the first tab is loaded.</b> To load every farm and cycle, paste your Apps Script /exec link into APPS_SCRIPT_URL at the top of this file.`;
+    if(publishedFallback&&!DATA.extra){
+      $('live').innerHTML+=` <b style="color:#E8B53A">Only the first tab is loaded</b> (${esc(publishedFallback)}). Paste your Apps Script /exec link into APPS_SCRIPT_URL, or list tab gids in TAB_GIDS.`;
     }
   }catch(err){
     $('live').innerHTML=`<span class="dot err"></span> ${esc(err.message)}${lastOk?` Showing data from ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}.`:''}`;
@@ -606,7 +644,7 @@ function drawCharts(d){
       options:{animation:false,indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} eggs${tot?` (${(c.raw/tot*100).toFixed(2)}% of TEP)`:''}`}}},
         scales:{x:{beginAtZero:true,ticks:{callback:v=>v>=1e3?(v/1e3)+'k':v}},y:{grid:{display:false}}}}});}
 }
-function foot(){$('foot').textContent=`Source: ${inAppsScript()||CFG.APPS_SCRIPT_URL?'Google Sheet (all tabs via Apps Script)':'Google Sheet published CSV'}. ${DATA.extra?'Cycle = Cycle_Name in the Flocks tab.':'Cycle = the title at the top of each farm tab.'} Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
+function foot(){$('foot').textContent=`Source: ${inAppsScript()||CFG.APPS_SCRIPT_URL?'Google Sheet (all tabs via Apps Script)':publishedFallback?'Google Sheet published CSV':'Google Sheet published workbook (all tabs)'}. ${DATA.extra?'Cycle = Cycle_Name in the Flocks tab.':'Cycle = the title at the top of each farm tab.'} Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
 // events
 $('hecls').addEventListener('change',e=>{state.hecls=e.target.value;render();});
 $('farm').addEventListener('change',e=>{state.farm=e.target.value;state.cycle='ALL';buildCycles();render();});
