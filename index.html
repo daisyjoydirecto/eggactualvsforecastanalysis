@@ -160,18 +160,19 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 </div></header>
 <div class="wrap">
 <div class="filters" role="group" aria-label="Filters">
+  <div class="field" style="max-width:150px"><label for="year">Year</label><select id="year"></select></div>
   <div class="field"><label for="farm">Farm</label><select id="farm"></select></div>
   <div class="field"><label for="cycle">Cycle</label><select id="cycle"></select></div>
   <div class="field" style="max-width:220px"><label for="hecls">HE classification</label><select id="hecls"><option value="ALL">Overall (all classes)</option><option value="0">Class A</option><option value="1">Class B</option><option value="2">Soiled</option></select></div>
   <div class="actions">
-    <button id="reset" type="button">Show all farms</button>
+    <button id="reset" type="button">Clear filters</button>
   </div>
   <div class="note" id="note"></div>
 </div>
 
 <div class="hero2">
   <div class="kgrid" id="kpis"></div>
-  <div class="panel breedp"><div class="bh"><h3>Production by breed</h3><span class="bnote" id="bnote"></span></div><div id="breeds"></div></div>
+  <div class="panel breedp"><div class="bh"><h3>Production by breed</h3></div><div id="breeds"></div></div>
 </div>
 
 <section>
@@ -275,7 +276,7 @@ const status=a=>a==null||!isFinite(a)?['No data','s-none']:a>=GREEN?['On target'
 const recStatus=r=>r==null||!isFinite(r)?['No data','s-none']:r>=HE_STD-1e-9?['On standard','s-ok']:r>=HE_STD-CFG.HE_WATCH_GAP?['Watch','s-warn']:['Below standard','s-bad'];
 const chip=([s,c])=>`<span class="status ${c}">${s}</span>`;
 const badge=a=>chip(status(a)), rbadge=r=>chip(recStatus(r));
-let state={farm:'ALL',cycle:'ALL',hecls:'ALL',period:'M'};
+let state={year:'ALL',farm:'ALL',cycle:'ALL',hecls:'ALL',period:'M'};
 try{const s=JSON.parse(localStorage.getItem('mmfi-live-filter')||'null');if(s)state=s;}catch(e){}
 $('stdTxt').textContent=pct(HE_STD);
 function setBandTxt(){$('bandTxt').textContent=`TEP and HE volume: green at ${pct(GREEN,0)} of forecast or better, amber from ${pct(YELLOW,0)}, red below. HE recovery: green at ${pct(HE_STD)} or better, amber within ${(CFG.HE_WATCH_GAP*100).toFixed(0)} points below, red below that.`;}
@@ -385,13 +386,13 @@ function buildV2(j){
   const cnt={};cycles.forEach(c=>cnt[c.id]=(cnt[c.id]||0)+1);cycles.forEach(c=>{if(cnt[c.id]>1)c.id+=` (${c.key})`;});
   return {cycles,rows,asof,skipped,extra,cls};
 }
-function clsMix(ci){const t=[0,0,0];let any=false;(DATA.cls||new Map()).forEach((o,k)=>{if(Math.floor(k/1000)!==ci)return;any=true;o.cl.forEach((v,i)=>t[i]+=v||0);});
+function clsMix(ci){const t=[0,0,0];let any=false;(DATA.cls||new Map()).forEach((o,k)=>{if(Math.floor(k/1000)!==ci||!inYear(o.ws))return;any=true;o.cl.forEach((v,i)=>t[i]+=v||0);});
   const s=t[0]+t[1]+t[2];return any&&s?t.map(v=>(v/s*100).toFixed(0)+'%').join(' / '):'–';}
 function health(cset){
   if(!DATA.extra)return null;
   const h={tep:0,hensDays:0,mort:0,housed:0,feed:0,heFeed:0,rej:REJ.map(()=>0),tepRej:0,weeksH:0,weeksF:0,weeksR:0};
   const mortBy=new Map();
-  DATA.extra.forEach(o=>{if(!cset.has(o.ci))return;
+  DATA.extra.forEach(o=>{if(!cset.has(o.ci)||!inYear(o.ws))return;
     if(o.hens>0&&o.at!=null){h.tep+=o.at;h.hensDays+=o.hens*7;h.weeksH++;}
     if(o.mort!=null||o.culls!=null)mortBy.set(o.ci,(mortBy.get(o.ci)||0)+(o.mort||0)+(o.culls||0));
     if(o.feed>0&&o.ah>0){h.feed+=o.feed;h.heFeed+=o.ah;h.weeksF++;}
@@ -492,19 +493,30 @@ async function refresh(){
 
 /* ---------- filters ---------- */
 function farms(){return [...new Set(DATA.cycles.map(c=>c.farm))].sort();}
+function buildYears(){
+  const ys=[...new Set(DATA.rows.filter(r=>r[5]!=null).map(r=>yearOf(r[2])))].sort((a,b)=>b-a);
+  if(state.year==null)state.year='ALL';if(state.year!=='ALL'&&!ys.includes(+state.year))state.year='ALL';
+  $('year').innerHTML='<option value="ALL">All years</option>'+ys.map(y=>`<option value="${y}">${y}</option>`).join('');$('year').value=state.year;
+}
 function buildFilters(){
+  DATA._cy=null;buildYears();
   if(state.hecls==null)state.hecls='ALL';$('hecls').value=state.hecls;
   const fs=$('farm');fs.innerHTML='<option value="ALL">All farms</option>'+farms().map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('');
   if(![...fs.options].some(o=>o.value===state.farm))state.farm='ALL';fs.value=state.farm;buildCycles();
 }
 function buildCycles(){
   const cs=$('cycle');
-  const list=DATA.cycles.filter(c=>state.farm==='ALL'||c.farm===state.farm).sort((a,b)=>b.start-a.start);
+  const list=DATA.cycles.filter((c,i)=>(state.farm==='ALL'||c.farm===state.farm)&&cycInYear(i)).sort((a,b)=>b.start-a.start);
   cs.innerHTML='<option value="ALL">All cycles</option><option value="ACTIVE">Active cycles only</option>'+
     list.map(c=>`<option value="${esc(c.id)}">${esc(c.id)} (${c.status.toLowerCase()})</option>`).join('');
   if(![...cs.options].some(o=>o.value===state.cycle))state.cycle='ALL';cs.value=state.cycle;
 }
+const yearOf=d=>new Date(d*DAY).getUTCFullYear();
+const inYear=d=>state.year==null||state.year==='ALL'||(d!=null&&yearOf(d)===+state.year);
+function cycYears(){if(!DATA._cy){DATA._cy=new Map();DATA.rows.forEach(r=>{if(r[4]==null&&r[5]==null)return;let s=DATA._cy.get(r[0]);if(!s){s=new Set();DATA._cy.set(r[0],s);}s.add(yearOf(r[2]));});}return DATA._cy;}
+const cycInYear=i=>state.year==null||state.year==='ALL'||(cycYears().get(i)||new Set()).has(+state.year);
 function inScope(c){
+  if(!cycInYear(DATA.cycles.indexOf(c)))return false;
   if(state.farm!=='ALL'&&c.farm!==state.farm)return false;
   if(state.cycle==='ACTIVE')return c.status==='Active';
   if(state.cycle!=='ALL')return c.id===state.cycle;
@@ -529,23 +541,23 @@ function render(){
   try{localStorage.setItem('mmfi-live-filter',JSON.stringify(state));}catch(e){}
   if(!state.period)state.period='M';
   document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===state.period)));
-  $('reset').disabled=state.farm==='ALL'&&state.cycle==='ALL'&&state.hecls==='ALL';
+  $('reset').disabled=state.farm==='ALL'&&state.cycle==='ALL'&&state.hecls==='ALL'&&(state.year||'ALL')==='ALL';
   const CL=['Class A','Class B','Soiled'],sel=state.hecls==='ALL'?null:+state.hecls,CLS=DATA.cls||new Map();
   const cyc=DATA.cycles.map((c,i)=>inScope(c)?i:-1).filter(i=>i>=0),cset=new Set(cyc);
   // HE rows follow the class filter: with a class picked, HE actual = that class, HE forecast = none
   const clsVal=(ci,pw)=>{const o=CLS.get(ci*1000+pw);return o&&o.cl[sel]!=null?o.cl[sel]:null;};
   const xform=r=>sel==null||r[3]!==1?r:[r[0],r[1],r[2],1,null,clsVal(r[0],r[1])];
-  const rows=DATA.rows.filter(r=>cset.has(r[0])).map(xform),g=agg(rows);
+  const rows=DATA.rows.filter(r=>cset.has(r[0])&&inYear(r[2])).map(xform),g=agg(rows);
   const heLbl=sel==null?'Hatching eggs (HE)':`HE ${CL[sel]}`, recLbl=sel==null?'HE recovery (HE ÷ TEP)':`${CL[sel]} ÷ TEP`;
   const rb=r=>sel==null?rbadge(r):`<span class="status s-none">share of TEP</span>`;
   const attT=g.f[0]?g.a[0]/g.f[0]:null,attH=g.f[1]?g.a[1]/g.f[1]:null;
   const avgF=g.matched?g.f[0]/g.matched:null,avgA=g.matched?g.a[0]/g.matched:null;
   // class totals in scope
-  const ct=[0,0,0];let cw=0;CLS.forEach((o,k)=>{if(!cset.has(Math.floor(k/1000)))return;cw++;o.cl.forEach((v,i)=>ct[i]+=v||0);});
+  const ct=[0,0,0];let cw=0;CLS.forEach((o,k)=>{if(!cset.has(Math.floor(k/1000))||!inYear(o.ws))return;cw++;o.cl.forEach((v,i)=>ct[i]+=v||0);});
   const csum=ct[0]+ct[1]+ct[2],hasCls=csum>0,heA=sel==null?g.a[1]:ct[sel];
   // note line
   const farmName=state.farm==='ALL'?'All farms':state.farm;
-  const cycName=state.cycle==='ALL'?'all cycles':state.cycle==='ACTIVE'?'active cycles':state.cycle;
+  const cycName=(state.cycle==='ALL'?'all cycles':state.cycle==='ACTIVE'?'active cycles':state.cycle)+(state.year&&state.year!=='ALL'?`, ${state.year}`:'');
   $('note').className='note'+(sel!=null&&!hasCls?' warn':'');
   $('note').textContent=`${farmName}, ${cycName}${sel!=null?', '+CL[sel]:''}: ${cyc.length} cycle${cyc.length===1?'':'s'}, ${g.matched.toLocaleString()} matched flock-weeks. Latest actuals up to ${dstr(DATA.asof)}.`+
     (sel!=null&&!hasCls?` No ${CL[sel]} figures are recorded for this selection yet, so hatching-egg panels are empty.`:'');
@@ -570,10 +582,9 @@ function render(){
     return `<div class="brow"><div class="bn">${esc(o.b)} <small>${o.n} · ${fmtM(o.tep)}</small></div>
       <div class="bbar" role="img" aria-label="${pct(o.att)} of forecast"><i style="width:${w}%;background:${col}"></i><b></b></div>
       <div class="bp">${pct(o.att)}</div><div class="bx">${sel==null?'HE rec.':CL[sel]+' ÷ TEP'} ${pct(o.rec)}${o.hd!=null?` · hen-day ${pct(o.hd)}`:''}</div></div>`}).join('')||'<p class="bnote">No flocks in this selection.</p>';
-  $('bnote').textContent='bar = TEP % of forecast · tick = 100%';
   // ---- classification section
   const cm=new Map();
-  CLS.forEach((o,k)=>{if(!cset.has(Math.floor(k/1000)))return;const key=periodKey(o.ws);const m=cm.get(key)||[0,0,0];o.cl.forEach((v,i)=>m[i]+=v||0);cm.set(key,m);});
+  CLS.forEach((o,k)=>{if(!cset.has(Math.floor(k/1000))||!inYear(o.ws))return;const key=periodKey(o.ws);const m=cm.get(key)||[0,0,0];o.cl.forEach((v,i)=>m[i]+=v||0);cm.set(key,m);});
   $('clsTiles').innerHTML=CL.map((n,i)=>`<div class="panel clst${sel===i?' sel':''}" style="border-left-color:${['var(--ac)','var(--he)','var(--yolk)'][i]}"><h3>${n}</h3><div class="val">${hasCls?fmtM(ct[i]):'–'}</div><p>${hasCls?pct(ct[i]/csum)+' of classified HE':'Not recorded yet'}</p></div>`).join('');
   $('clsDesc').textContent=hasCls?`Class A, Class B and Soiled hatching eggs across ${cw} flock-weeks with classification data${sel!=null?`. Showing ${CL[sel]} only; its share of HE is the line (right axis)`:''}.`:
     (DATA.extra?'No classification yet. Fill HE_Class_A, HE_Class_B and HE_Soiled in Weekly_Log.':'No classification yet. Add columns titled "HE CLASS A", "HE CLASS B" and "SOILED" to each farm tab (same row as AGE FLOCK); HE total is used as-is, or computed as A + B + Soiled when blank.');
@@ -612,11 +623,11 @@ function render(){
   const rankCycles=state.farm!=='ALL';
   const fr=new Map();
   DATA.cycles.forEach((c,i)=>{if(rankCycles?c.farm!==state.farm:false)return;if(state.cycle==='ACTIVE'&&c.status!=='Active')return;});
-  const include=c=>(rankCycles?c.farm===state.farm:true)&&(state.cycle!=='ACTIVE'||c.status==='Active');
+  const include=c=>(rankCycles?c.farm===state.farm:true)&&(state.cycle!=='ACTIVE'||c.status==='Active')&&cycInYear(DATA.cycles.indexOf(c));
   if(sel==null){
-    DATA.rows.forEach(r=>{const c=DATA.cycles[r[0]];if(r[3]!==0||!(r[4]>0)||r[5]==null||!include(c))return;const key=rankCycles?r[0]:c.farm;const o=fr.get(key)||{f:0,a:0};o.f+=r[4];o.a+=r[5];fr.set(key,o);});
+    DATA.rows.forEach(r=>{const c=DATA.cycles[r[0]];if(r[3]!==0||!(r[4]>0)||r[5]==null||!include(c)||!inYear(r[2]))return;const key=rankCycles?r[0]:c.farm;const o=fr.get(key)||{f:0,a:0};o.f+=r[4];o.a+=r[5];fr.set(key,o);});
   }else{
-    CLS.forEach((o,k)=>{const ci=Math.floor(k/1000),c=DATA.cycles[ci];if(!include(c))return;const key=rankCycles?ci:c.farm;const q=fr.get(key)||{f:0,a:0};q.f+=o.cl.reduce((x,v)=>x+(v||0),0);q.a+=o.cl[sel]||0;fr.set(key,q);});
+    CLS.forEach((o,k)=>{const ci=Math.floor(k/1000),c=DATA.cycles[ci];if(!include(c)||!inYear(o.ws))return;const key=rankCycles?ci:c.farm;const q=fr.get(key)||{f:0,a:0};q.f+=o.cl.reduce((x,v)=>x+(v||0),0);q.a+=o.cl[sel]||0;fr.set(key,q);});
   }
   const rk=[...fr.entries()].filter(([,o])=>o.f>0).map(([id,o])=>({id,label:rankCycles?DATA.cycles[id].id:id,v:o.a/o.f*100,
     hi:rankCycles?(DATA.cycles[id].id===state.cycle):false})).sort((a,b)=>b.v-a.v);
@@ -692,10 +703,11 @@ function drawCharts(d){
 function foot(){$('foot').textContent=`Source: ${inAppsScript()||CFG.APPS_SCRIPT_URL?'Google Sheet (all tabs via Apps Script)':publishedFallback?'Google Sheet published CSV':'Google Sheet published workbook (all tabs)'}. ${DATA.extra?'Cycle = Cycle_Name in the Flocks tab.':'Cycle = the title at the top of each farm tab.'} Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
 // events
 document.querySelectorAll('.seg').forEach(g=>g.addEventListener('click',e=>{const b=e.target.closest('button[data-p]');if(!b)return;state.period=b.dataset.p;render();}));
+$('year').addEventListener('change',e=>{state.year=e.target.value;buildCycles();render();});
 $('hecls').addEventListener('change',e=>{state.hecls=e.target.value;render();});
 $('farm').addEventListener('change',e=>{state.farm=e.target.value;state.cycle='ALL';buildCycles();render();});
 $('cycle').addEventListener('change',e=>{state.cycle=e.target.value;render();});
-$('reset').addEventListener('click',()=>{state={farm:'ALL',cycle:'ALL',hecls:'ALL',period:state.period||'M'};buildFilters();render();});
+$('reset').addEventListener('click',()=>{state={year:'ALL',farm:'ALL',cycle:'ALL',hecls:'ALL',period:state.period||'M'};buildFilters();render();});
 const openRow=tr=>{if(!tr)return;const c=DATA.cycles[+tr.dataset.i];state.farm=c.farm;state.cycle=c.id;buildFilters();render();window.scrollTo({top:0,behavior:'smooth'});};
 $('tCyc').addEventListener('click',e=>openRow(e.target.closest('tr.click')));
 $('tCyc').addEventListener('keydown',e=>{if(e.key==='Enter')openRow(e.target.closest('tr.click'));});
