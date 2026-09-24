@@ -24,14 +24,14 @@
   --bg:#121A17;--panel:#1A2420;--ink:#E6EEE9;--muted:#98A8A1;--line:#2C3934;
   --fc:#5F6F68;--ac:#6FC196;--yolk:#E8B53A;--he:#4E8C6C;--hef:#34493F;
   --ok:#7FD3A1;--okbg:#1F3A2C;--warn:#F0C66B;--warnbg:#3A3020;--bad:#F29488;--badbg:#3F2421;}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html{scroll-padding-top:calc(160px + env(safe-area-inset-top,0px))}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Archivo,"Helvetica Neue",Arial,sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
-.wrap{max-width:1280px;margin:0 auto;padding:20px clamp(14px,3vw,32px) 48px}
+.wrap{max-width:1280px;margin:0 auto;padding:8px clamp(14px,3vw,32px) 48px}
 header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:18px}
 h1{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
 .sub{color:var(--muted);font-size:14px;margin-top:4px}
-.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 12px;margin-bottom:6px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end}
+.filters{position:sticky;top:calc(49px + env(safe-area-inset-top,0px));z-index:5;background:var(--bg);padding:10px 0 12px;margin-bottom:6px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end}
 .field{display:flex;flex-direction:column;gap:4px;min-width:140px;flex:1 1 150px;max-width:320px}
 .field label{font-size:13px;font-weight:600;color:var(--muted)}
 select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
@@ -81,17 +81,42 @@ td.info{color:var(--muted);font-style:italic}
 .legendnote{font-size:12px;color:var(--muted);margin-top:8px}
 footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:14px}
 .hidden{display:none}
-.mast{background:#0F0F0F;color:#fff;border-bottom:4px solid #8DB600;padding:calc(22px + env(safe-area-inset-top,0px)) 0 20px;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
-.mast .in{max-width:1280px;margin:0 auto;padding:0 clamp(14px,3vw,32px);display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px}
-.mast .kicker{font-family:"Libre Baskerville",Georgia,serif;font-size:12px;letter-spacing:.22em;color:#8DB600;margin:0 0 6px}
-.mast h1{font-family:"Libre Baskerville",Georgia,serif;font-size:clamp(24px,3.4vw,32px);font-weight:700;letter-spacing:0;color:#fff;margin:0;line-height:1.15}
-.mast .msub{font-family:"Libre Baskerville",Georgia,serif;color:#D0D0D0;font-size:14px;margin-top:6px}
-.mast .live{font-size:13px;color:#BDBDBD;margin-top:10px}
+.breeds{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+.breeds h3{margin:0 0 8px;font-size:14px;font-weight:600;color:var(--muted)}
+.brow{display:grid;grid-template-columns:120px minmax(0,1fr) 64px 185px;gap:6px 14px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.brow:last-child{border-bottom:0}
+.brow .bn{font-weight:700}.brow .bn small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.brow .bbar{position:relative;height:10px;background:var(--bg);border-radius:3px}
+.brow .bbar i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--ac)}
+.brow .bbar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);left:66.67%}
+.brow .bp{font-weight:700;text-align:right;min-width:62px}
+.brow .bx{color:var(--muted);font-size:12.5px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bnote{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+.clsgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.clst{border-left:5px solid var(--ac)}
+.clst.sel{outline:2px solid var(--ink);outline-offset:-2px}
+.clst h3{margin:0;font-size:14px;font-weight:600;color:var(--muted)}
+.clst .val{font-size:28px;font-weight:700;margin-top:4px}
+.clst p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+@media (max-width:900px){.clsgrid{grid-template-columns:1fr}.brow{grid-template-columns:minmax(80px,1fr) minmax(0,1.4fr) auto}.brow .bx{grid-column:1/-1;text-align:left}}
+.hgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.htile h3,.ph{margin:0;font-size:14px;font-weight:600;color:var(--muted)}
+.htile .val{font-size:30px;font-weight:700;margin-top:6px;letter-spacing:-.01em}
+.htile p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+@media (max-width:900px){.hgrid{grid-template-columns:1fr}}
+.mast{position:sticky;top:0;z-index:20;background:#0F0F0F;color:#fff;border-bottom:3px solid #8DB600;padding:env(safe-area-inset-top,0px) 0 0;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
+.mast .in{max-width:1280px;margin:0 auto;padding:0 clamp(14px,3vw,32px);height:46px;display:flex;align-items:center;gap:14px}
+.mast .kicker{font-family:"Libre Baskerville",Georgia,serif;font-size:10.5px;letter-spacing:.18em;color:#8DB600;margin:0;white-space:nowrap}
+.mast h1{font-family:"Libre Baskerville",Georgia,serif;font-size:16px;font-weight:700;letter-spacing:0;color:#fff;margin:0;line-height:1.2;white-space:nowrap}
+.mast .sep{width:1px;height:18px;background:#3A3A3A;flex:0 0 auto}
+.mast .live{font-size:12px;color:#BDBDBD;margin:0 0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .mast .dot{background:#777}.mast .dot.on{background:#8DB600;box-shadow:0 0 0 3px rgba(141,182,0,.25)}.mast .dot.err{background:#E0574C}
-.refresh{font-family:"Libre Baskerville",Georgia,serif;font-size:13.5px;font-weight:700;color:#0F0F0F;background:#8DB600;border:1px solid #8DB600;border-radius:0;padding:9px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+@media (max-width:1100px){.mast .kicker,.mast .sep{display:none}}
+@media (max-width:640px){.mast h1{font-size:14px}.mast .live{font-size:11px}.refresh span{display:none}.refresh{padding:6px 9px}}
+.refresh{flex:0 0 auto;font-family:"Libre Baskerville",Georgia,serif;font-size:12.5px;font-weight:700;color:#0F0F0F;background:#8DB600;border:1px solid #8DB600;border-radius:0;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .refresh:hover{background:#A3CC14;border-color:#A3CC14}
 .refresh:disabled{opacity:.6;cursor:progress}
-.refresh svg{width:15px;height:15px}
+.refresh svg{width:13px;height:13px}
 .refresh.spin svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.refresh.spin svg{animation:none}}
@@ -104,18 +129,16 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 </head>
 <body>
 <header class="mast"><div class="in">
-  <div>
-    <p class="kicker">M. MONTESCLAROS FARMS INC. — SAYRE HIGHWAY, HAGKOL</p>
-    <h1>Farm Production: Forecast vs Actual</h1>
-    <div class="msub">Total eggs (TEP) · Hatching eggs (HE) · HE recovery vs standard — per farm and cycle</div>
-    <div class="live" id="live" aria-live="polite"><span class="dot"></span> Connecting to Google Sheet…</div>
-  </div>
-  <button id="load" class="refresh" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>Refresh data</span></button>
+  <p class="kicker">M. MONTESCLAROS FARMS INC.</p><span class="sep"></span>
+  <h1>Farm Production: Forecast vs Actual</h1>
+  <div class="live" id="live" aria-live="polite"><span class="dot"></span> Connecting to Google Sheet…</div>
+  <button id="load" class="refresh" type="button" title="Refresh data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>Refresh data</span></button>
 </div></header>
 <div class="wrap">
 <div class="filters" role="group" aria-label="Filters">
   <div class="field"><label for="farm">Farm</label><select id="farm"></select></div>
   <div class="field"><label for="cycle">Cycle</label><select id="cycle"></select></div>
+  <div class="field" style="max-width:220px"><label for="hecls">HE classification</label><select id="hecls"><option value="ALL">Overall (all classes)</option><option value="0">Class A</option><option value="1">Class B</option><option value="2">Soiled</option></select></div>
   <div class="actions">
     <button id="reset" type="button">Show all farms</button>
   </div>
@@ -128,6 +151,7 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
     <div class="big" id="heroVal">–</div>
     <p id="heroText"></p>
     <div style="margin-top:12px" id="heroStatus"></div>
+    <div class="breeds"><h3>Production by breed</h3><div id="breeds"></div><p class="bnote" id="bnote"></p></div>
   </div>
   <div class="panel kpis" id="kpis"></div>
 </div>
@@ -157,6 +181,24 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
   <div class="panel"><div class="chartbox"><canvas id="cRec" aria-label="HE recovery by week vs standard"></canvas></div></div>
 </section>
 
+<section id="clsSec">
+  <h2>Hatching egg classification</h2>
+  <p class="desc" id="clsDesc">Class A, Class B and Soiled hatching eggs, as a share of all classified HE. Use the HE classification filter to focus on one class.</p>
+  <div class="clsgrid" id="clsTiles"></div>
+  <div class="panel" id="clsChartP"><h3 class="ph" id="clsChartT">Monthly HE by class</h3><div class="chartbox"><canvas id="cCls" aria-label="Hatching eggs by class per month"></canvas></div></div>
+</section>
+
+<section id="health" class="hidden">
+  <h2>Flock health &amp; HE losses</h2>
+  <p class="desc">From the baseline template's Weekly_Log. Tiles show "not recorded" until the bird-count, mortality, feed and reject columns are filled in.</p>
+  <div class="hgrid">
+    <div class="panel htile"><h3>Hen-day production</h3><div class="val" id="hHD">–</div><p id="hHDn"></p></div>
+    <div class="panel htile"><h3>Cumulative mortality + culls</h3><div class="val" id="hMort">–</div><p id="hMortn"></p></div>
+    <div class="panel htile"><h3>Feed per dozen HE</h3><div class="val" id="hFeed">–</div><p id="hFeedn"></p></div>
+  </div>
+  <div class="panel" style="margin-top:18px"><h3 class="ph">Where the non-hatching eggs go</h3><p class="desc" id="hRejn" style="margin:2px 0 10px"></p><div class="chartbox"><canvas id="cRej" aria-label="Rejected eggs by reason"></canvas></div></div>
+</section>
+
 <section>
   <h2>Metric breakdown</h2>
   <p class="desc">Variance = Actual − Forecast. % variance = (Actual − Forecast) ÷ Forecast. <span id="bandTxt"></span></p>
@@ -166,7 +208,7 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 <section>
   <h2>Cycles in view</h2>
   <p class="desc">One row per sheet tab. Click a row to open that cycle.</p>
-  <div class="tablewrap"><table id="tCyc"><thead><tr><th>Cycle (sheet title)</th><th>Breed</th><th>Status</th><th>Started</th><th>Weeks</th><th>TEP actual</th><th>TEP attainment</th><th>HE attainment</th><th>HE recovery</th></tr></thead><tbody></tbody></table></div>
+  <div class="tablewrap"><table id="tCyc"><thead><tr><th>Cycle (sheet title)</th><th>Breed</th><th>Status</th><th>Started</th><th>Weeks</th><th>TEP actual</th><th>TEP attainment</th><th>HE attainment</th><th>HE recovery</th><th>Class A / B / Soiled</th></tr></thead><tbody></tbody></table></div>
 </section>
 
 <footer id="foot"></footer>
@@ -177,7 +219,7 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 window.MMFI_CONFIG = {
   // RECOMMENDED for GitHub Pages: paste your Apps Script Web app URL (ends in /exec) here.
   // When set, every farm tab is read automatically and PUBLISHED_BASE / TAB_GIDS below are ignored.
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwoF2EH77cvxlXF5rBW_d8vu1HhrMr92SLMNZt6tlABrpOvl4tq1kgZL0Awq3-sp4Vp/exec",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwwT6XYn6d83MWVzsUTGzoJExRCaK4MXLZZVKzl5CYdohOs3jT5C5n-u40RfyuJaqgW7g/exec",
   // Fallback: your sheet's "Publish to web" link (the part before "?").
   PUBLISHED_BASE: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQbE_0TKpMmSjDG83KU6e1i56rN5Ba6EJSkkdsx3HX3xEULHhxCx7C7U-uP6N90lwjNsO7icZagXk26/pub",
   // Leave empty to load only the first tab. To load more tabs, list each tab's gid number:
@@ -196,9 +238,9 @@ window.MMFI_CONFIG = {
 </script>
 <script>
 (function(){
-const CFG=window.MMFI_CONFIG, HE_STD=CFG.HE_STANDARD, GREEN=CFG.TARGET_GREEN, YELLOW=CFG.TARGET_YELLOW;
+const CFG=window.MMFI_CONFIG;let HE_STD=CFG.HE_STANDARD, GREEN=CFG.TARGET_GREEN, YELLOW=CFG.TARGET_YELLOW;
 const DAY=86400000;
-let DATA={cycles:[],rows:[],asof:0,skipped:[]};
+let DATA={cycles:[],rows:[],asof:0,skipped:[],extra:null};
 const $=id=>document.getElementById(id);
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmt=n=>n==null||isNaN(n)?'–':Math.round(n).toLocaleString('en-US');
@@ -213,10 +255,11 @@ const status=a=>a==null||!isFinite(a)?['No data','s-none']:a>=GREEN?['On target'
 const recStatus=r=>r==null||!isFinite(r)?['No data','s-none']:r>=HE_STD-1e-9?['On standard','s-ok']:r>=HE_STD-CFG.HE_WATCH_GAP?['Watch','s-warn']:['Below standard','s-bad'];
 const chip=([s,c])=>`<span class="status ${c}">${s}</span>`;
 const badge=a=>chip(status(a)), rbadge=r=>chip(recStatus(r));
-let state={farm:'ALL',cycle:'ALL'};
+let state={farm:'ALL',cycle:'ALL',hecls:'ALL'};
 try{const s=JSON.parse(localStorage.getItem('mmfi-live-filter')||'null');if(s)state=s;}catch(e){}
 $('stdTxt').textContent=pct(HE_STD);
-$('bandTxt').textContent=`TEP and HE volume: green at ${pct(GREEN,0)} of forecast or better, amber from ${pct(YELLOW,0)}, red below. HE recovery: green at ${pct(HE_STD)} or better, amber within ${(CFG.HE_WATCH_GAP*100).toFixed(0)} points below, red below that.`;
+function setBandTxt(){$('bandTxt').textContent=`TEP and HE volume: green at ${pct(GREEN,0)} of forecast or better, amber from ${pct(YELLOW,0)}, red below. HE recovery: green at ${pct(HE_STD)} or better, amber within ${(CFG.HE_WATCH_GAP*100).toFixed(0)} points below, red below that.`;}
+setBandTxt();
 
 /* ---------- parsing a farm tab (CSV rows or Apps Script display values) ---------- */
 const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
@@ -246,13 +289,16 @@ function parseTab(tabName,grid){
   const cF=findCol(hdr,x=>x.includes('FORECAST')&&(x.includes('TEP')||x.includes('TOTAL EGG')),3);
   const cA=findCol(hdr,x=>x.includes('TOTAL EGGS PRODUCED')&&!x.includes('FORECAST'),4);
   const cFH=findCol(hdr,x=>x.includes('FORECAST')&&x.includes('HE'),6);
-  const cAH=findCol(hdr,x=>x.includes('ACTUAL')&&x.includes('HATCHING'),7);
+  const cAH=findCol(hdr,x=>x.includes('ACTUAL')&&x.includes('HATCHING')&&!/CLASS|SOIL/.test(x),7);
+  const cCA=hdr.findIndex(x=>/CLASS\s*A\b/.test(x)),cCB=hdr.findIndex(x=>/CLASS\s*B\b/.test(x)),cCS=hdr.findIndex(x=>/SOIL/.test(x));
   const weeks=[];
   for(let i=h+1;i<grid.length;i++){
     const r=grid[i]||[];const ws=toDay(r[1]);if(ws==null)continue;
-    const f=num(r[cF]),a=num(r[cA]),fh=num(r[cFH]),ah=num(r[cAH]);
+    const f=num(r[cF]),a=num(r[cA]),fh=num(r[cFH]);let ah=num(r[cAH]);
+    const cl=[cCA,cCB,cCS].map(c=>c>=0?num(r[c]):null);
+    if(ah==null&&cl.some(v=>v!=null))ah=cl.reduce((x,v)=>x+(v||0),0);
     if(f==null&&a==null&&fh==null&&ah==null)continue;
-    weeks.push({age:String(r[0]||'').trim(),ws,we:toDay(r[2])??ws+6,f:f>0?f:null,a,fh:fh>0?fh:null,ah});
+    weeks.push({age:String(r[0]||'').trim(),ws,we:toDay(r[2])??ws+6,f:f>0?f:null,a,fh:fh>0?fh:null,ah,cl:cl.some(v=>v!=null)?cl:null});
   }
   if(!weeks.length)return {skip:`${title}: no weekly data yet`};
   weeks.sort((x,y)=>x.ws-y.ws);
@@ -265,7 +311,7 @@ function farmOf(title){
 }
 const breedOf=t=>(t.toUpperCase().match(/ROSS|COBB|HUBBARD/)||['—'])[0].replace(/^./,c=>c).toLowerCase().replace(/^./,c=>c.toUpperCase());
 function build(tabs,skipped){
-  const cycles=[],rows=[];let asof=0;const seen={};
+  const cycles=[],rows=[],cls=new Map();let asof=0;const seen={};
   tabs.forEach(t=>{const la=t.weeks.filter(w=>w.a!=null);const endA=la.length?la[la.length-1].we:null;if(endA&&endA>asof)asof=endA;});
   tabs.forEach(t=>{
     const start=t.weeks[0].ws,la=t.weeks.filter(w=>w.a!=null),end=la.length?la[la.length-1].we:null;
@@ -274,12 +320,65 @@ function build(tabs,skipped){
     const active=!culled&&end!=null&&asof-end<=CFG.ACTIVE_WITHIN_DAYS;
     cycles.push({farm:farmOf(t.title),id,breed:breedOf(t.title),status:active?'Active':'Completed',start,end,tab:t.tabName||''});
     const ci=cycles.length-1;
-    t.weeks.forEach((w,k)=>{rows.push([ci,k+1,w.ws,0,w.f,w.a]);rows.push([ci,k+1,w.ws,1,w.fh,w.ah]);});
+    t.weeks.forEach((w,k)=>{rows.push([ci,k+1,w.ws,0,w.f,w.a]);rows.push([ci,k+1,w.ws,1,w.fh,w.ah]);if(w.cl)cls.set(ci*1000+k+1,{ws:w.ws,cl:w.cl});});
   });
   // make duplicate titles unique with the start month
   const cnt={};cycles.forEach(c=>cnt[c.id]=(cnt[c.id]||0)+1);
   cycles.forEach(c=>{if(cnt[c.id]>1)c.id+=` (${new Date(c.start*DAY).toLocaleDateString('en-US',{month:'short',year:'numeric',timeZone:'UTC'})})`;});
-  return {cycles,rows,asof,skipped};
+  return {cycles,rows,asof,skipped,cls};
+}
+/* ---------- baseline template (Flocks / Weekly_Log / Forecast / Settings) ---------- */
+const REJ=[['Rej_Cracked','Cracked'],['Rej_Dirty','Dirty'],['Rej_Double_Yolk','Double yolk'],['Rej_Small','Small'],['Rej_Misshapen','Misshapen'],['Floor_Eggs','Floor eggs']];
+function buildV2(j){
+  const S={};(j.Settings||[]).forEach(r=>{if(r.Setting)S[String(r.Setting).trim()]=r.Value;});
+  const sn=k=>{const v=num(S[k]);return v==null?null:(v>1?v/100:v);};
+  if(sn('HE_Standard')!=null)HE_STD=sn('HE_Standard');
+  if(sn('Target_Green')!=null)GREEN=sn('Target_Green');
+  if(sn('Target_Yellow')!=null)YELLOW=sn('Target_Yellow');
+  if(sn('HE_Watch_Gap')!=null)CFG.HE_WATCH_GAP=sn('HE_Watch_Gap');
+  const cycles=[],idx=new Map(),skipped=[];
+  (j.Flocks||[]).forEach(f=>{const key=f.Cycle_ID&&String(f.Cycle_ID).trim();if(!key||idx.has(key))return;
+    idx.set(key,cycles.length);
+    cycles.push({key,farm:String(f.Farm||key).trim().toUpperCase(),id:String(f.Cycle_Name||key).trim(),breed:f.Breed?String(f.Breed):'—',
+      status:/active/i.test(String(f.Status||''))?'Active':'Completed',start:toDay(f.First_Prod_Week)??toDay(f.Placement_Date),end:toDay(f.Cull_Date),hens:num(f.Hens_Housed),tab:''});});
+  const cell=new Map();const get=(ci,pw)=>{const k=ci*1000+pw;let o=cell.get(k);if(!o){o={ci,pw,ws:null};cell.set(k,o);}return o;};
+  const orphan=new Set();let asof=0;
+  // fill missing Prod_Week by date order per cycle
+  const pwFix=(list,dateKey)=>{const by={};list.forEach(r=>{const c=String(r.Cycle_ID||'').trim();(by[c]=by[c]||[]).push(r);});
+    Object.values(by).forEach(l=>{if(l.some(r=>num(r.Prod_Week)==null)){l.sort((a,b)=>(toDay(a[dateKey])||0)-(toDay(b[dateKey])||0));l.forEach((r,i)=>{if(num(r.Prod_Week)==null)r.Prod_Week=i+1;});}});};
+  pwFix(j.Weekly_Log||[],'Week_Start');pwFix(j.Forecast||[],'Week_Start');
+  (j.Weekly_Log||[]).forEach(r=>{const key=String(r.Cycle_ID||'').trim(),ci=idx.get(key);if(ci==null){if(key)orphan.add(key);return;}
+    const o=get(ci,num(r.Prod_Week));const ws=toDay(r.Week_Start)??(toDay(r.Week_Ending)!=null?toDay(r.Week_Ending)-6:null);if(ws!=null)o.ws=ws;
+    o.at=num(r.TEP);o.ah=num(r.HE);{const cl=[num(r.HE_Class_A),num(r.HE_Class_B),num(r.HE_Soiled)];if(cl.some(v=>v!=null)){o.cl=cl;if(o.ah==null)o.ah=cl.reduce((x,v)=>x+(v||0),0);}}o.hens=num(r.Hens_Start);o.mort=num(r.Hen_Mortality);o.culls=num(r.Hen_Culls);o.feed=num(r.Feed_Hen_kg);
+    o.rej=REJ.map(([k])=>num(r[k]));
+    if(o.at!=null&&ws!=null&&ws+6>asof)asof=ws+6;});
+  (j.Forecast||[]).forEach(r=>{const key=String(r.Cycle_ID||'').trim(),ci=idx.get(key);if(ci==null){if(key)orphan.add(key);return;}
+    const o=get(ci,num(r.Prod_Week));if(o.ws==null)o.ws=toDay(r.Week_Start);const ft=num(r.Forecast_TEP),fh=num(r.Forecast_HE);o.ft=ft>0?ft:null;o.fh=fh>0?fh:null;});
+  const rows=[],extra=new Map(),cls=new Map();
+  cell.forEach(o=>{if(o.pw==null||o.ws==null)return;
+    rows.push([o.ci,o.pw,o.ws,0,o.ft??null,o.at??null]);rows.push([o.ci,o.pw,o.ws,1,o.fh??null,o.ah??null]);
+    extra.set(o.ci*1000+o.pw,o);if(o.cl)cls.set(o.ci*1000+o.pw,{ws:o.ws,cl:o.cl});
+    const c=cycles[o.ci];if(c.start==null||o.ws<c.start)c.start=o.ws;});
+  if(orphan.size)skipped.push('Cycle_ID not in Flocks: '+[...orphan].join(', '));
+  cycles.forEach(c=>{if(c.start==null)c.start=0;});
+  // unique display names
+  const cnt={};cycles.forEach(c=>cnt[c.id]=(cnt[c.id]||0)+1);cycles.forEach(c=>{if(cnt[c.id]>1)c.id+=` (${c.key})`;});
+  return {cycles,rows,asof,skipped,extra,cls};
+}
+function clsMix(ci){const t=[0,0,0];let any=false;(DATA.cls||new Map()).forEach((o,k)=>{if(Math.floor(k/1000)!==ci)return;any=true;o.cl.forEach((v,i)=>t[i]+=v||0);});
+  const s=t[0]+t[1]+t[2];return any&&s?t.map(v=>(v/s*100).toFixed(0)+'%').join(' / '):'–';}
+function health(cset){
+  if(!DATA.extra)return null;
+  const h={tep:0,hensDays:0,mort:0,housed:0,feed:0,heFeed:0,rej:REJ.map(()=>0),tepRej:0,weeksH:0,weeksF:0,weeksR:0};
+  const mortBy=new Map();
+  DATA.extra.forEach(o=>{if(!cset.has(o.ci))return;
+    if(o.hens>0&&o.at!=null){h.tep+=o.at;h.hensDays+=o.hens*7;h.weeksH++;}
+    if(o.mort!=null||o.culls!=null)mortBy.set(o.ci,(mortBy.get(o.ci)||0)+(o.mort||0)+(o.culls||0));
+    if(o.feed>0&&o.ah>0){h.feed+=o.feed;h.heFeed+=o.ah;h.weeksF++;}
+    if(o.rej&&o.rej.some(v=>v!=null)){o.rej.forEach((v,i)=>h.rej[i]+=v||0);h.tepRej+=o.at||0;h.weeksR++;}});
+  mortBy.forEach((m,ci)=>{const hh=DATA.cycles[ci].hens;if(hh>0){h.mort+=m;h.housed+=hh;}});
+  h.hd=h.hensDays?h.tep/h.hensDays:null; h.mortPct=h.housed?h.mort/h.housed:null; h.fpd=h.heFeed?h.feed/(h.heFeed/12):null;
+  return h;
 }
 /* ---------- loading ---------- */
 const inAppsScript=()=>typeof google!=='undefined'&&google.script&&google.script.run;
@@ -289,7 +388,7 @@ async function loadAppsScriptUrl(){
   if(!r.ok)throw new Error(`Apps Script link returned ${r.status}.`);
   const txt=await r.text();let j;try{j=JSON.parse(txt);}catch(e){throw new Error('Apps Script link did not return data. Deploy Code.gs as a Web app with access set to Anyone, then paste the /exec URL.');}
   if(j.error)throw new Error('Apps Script error: '+j.error);
-  return j.tabs||j;
+  return j;
 }
 function loadAppsScript(){return new Promise((res,rej)=>{google.script.run.withSuccessHandler(res).withFailureHandler(e=>rej(new Error(e&&e.message||e))).getAllTabs();});}
 async function loadCsv(){
@@ -309,14 +408,20 @@ let loading=false,lastOk=null;
 async function refresh(){
   if(loading)return;loading=true;$('load').disabled=true;$('load').classList.add('spin');$('load').querySelector('span').textContent='Refreshing…';
   try{
-    const tabs=inAppsScript()?await loadAppsScript():(CFG.APPS_SCRIPT_URL?await loadAppsScriptUrl():await loadCsv());
-    const skip=new Set((CFG.SKIP_TABS||[]).map(x=>x.toUpperCase()));
-    const parsed=[],skipped=[];
-    tabs.forEach(t=>{if(t.name&&skip.has(t.name.toUpperCase())){skipped.push(`${t.name}: in SKIP_TABS`);return;}
-      const p=parseTab(t.name,t.values);if(p.skip)skipped.push(p.skip);else parsed.push(p);});
-    if(!parsed.length)throw new Error('No farm tabs with weekly data were found.');
-    DATA=build(parsed,skipped);lastOk=new Date();
-    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet: ${DATA.cycles.length} tab${DATA.cycles.length===1?'':'s'}, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
+    let got=inAppsScript()?await loadAppsScript():(CFG.APPS_SCRIPT_URL?await loadAppsScriptUrl():await loadCsv());
+    if(got&&got.schema===2){DATA=buildV2(got);}
+    else{
+      const tabs=Array.isArray(got)?got:(got.tabs||[]);
+      const skip=new Set((CFG.SKIP_TABS||[]).map(x=>x.toUpperCase()));
+      const parsed=[],skipped=[];
+      tabs.forEach(t=>{if(t.name&&skip.has(t.name.toUpperCase())){skipped.push(`${t.name}: in SKIP_TABS`);return;}
+        const p=parseTab(t.name,t.values);if(p.skip)skipped.push(p.skip);else parsed.push(p);});
+      if(!parsed.length)throw new Error('No farm tabs with weekly data were found.');
+      DATA=build(parsed,skipped);
+    }
+    lastOk=new Date();$('stdTxt').textContent=pct(HE_STD);setBandTxt();
+    $('health').classList.toggle('hidden',!DATA.extra);
+    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet${DATA.extra?' (baseline template)':''}: ${DATA.cycles.length} ${DATA.extra?'flock':'tab'}${DATA.cycles.length===1?'':'s'}, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
     $('lead').classList.remove('skel');buildFilters();render();foot();
     if(!inAppsScript()&&!CFG.APPS_SCRIPT_URL&&!(CFG.TAB_GIDS||[]).length){
       $('live').innerHTML+=` <b style="color:#E8B53A">Only the first tab is loaded.</b> To load every farm and cycle, paste your Apps Script /exec link into APPS_SCRIPT_URL at the top of this file.`;
@@ -329,6 +434,7 @@ async function refresh(){
 /* ---------- filters ---------- */
 function farms(){return [...new Set(DATA.cycles.map(c=>c.farm))].sort();}
 function buildFilters(){
+  if(state.hecls==null)state.hecls='ALL';$('hecls').value=state.hecls;
   const fs=$('farm');fs.innerHTML='<option value="ALL">All farms</option>'+farms().map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('');
   if(![...fs.options].some(o=>o.value===state.farm))state.farm='ALL';fs.value=state.farm;buildCycles();
 }
@@ -359,7 +465,7 @@ function agg(rows){
 let charts={};
 function render(){
   try{localStorage.setItem('mmfi-live-filter',JSON.stringify(state));}catch(e){}
-  $('reset').disabled=state.farm==='ALL'&&state.cycle==='ALL';
+  $('reset').disabled=state.farm==='ALL'&&state.cycle==='ALL'&&state.hecls==='ALL';
   const cyc=DATA.cycles.map((c,i)=>inScope(c)?i:-1).filter(i=>i>=0),cset=new Set(cyc);
   const rows=DATA.rows.filter(r=>cset.has(r[0])),g=agg(rows);
   const attT=g.f[0]?g.a[0]/g.f[0]:null,attH=g.f[1]?g.a[1]/g.f[1]:null;
@@ -372,9 +478,36 @@ function render(){
   $('heroText').textContent=attT==null?'No weeks in this selection have both a forecast and an actual.':
     `${fmtM(g.a[0])} eggs produced against ${fmtM(g.f[0])} forecast, ${snum(g.a[0]-g.f[0])} eggs (${spct(attT-1)}).${g.ua-g.a[0]>0?' '+fmtM(g.ua-g.a[0])+' more eggs came in weeks with no forecast.':''}`;
   $('heroStatus').innerHTML=badge(attT);
+  // ---- production by breed
+  const byB=new Map();
+  cyc.forEach(i=>{const b=DATA.cycles[i].breed||'—';if(!byB.has(b))byB.set(b,new Set());byB.get(b).add(i);});
+  const bl=[...byB.entries()].map(([b,set])=>{const gg=agg(rows.filter(r=>set.has(r[0])));const hh=health(set);
+    return {b:b==='—'?'Not specified':b,n:set.size,att:gg.f[0]?gg.a[0]/gg.f[0]:null,tep:gg.a[0],rec:gg.rec,hd:hh?hh.hd:null};}).sort((x,y)=>(y.att??-1)-(x.att??-1));
+  $('breeds').innerHTML=bl.map(o=>{const w=o.att==null?0:Math.max(0,Math.min(1,o.att/1.5))*100;const col=o.att==null?'var(--fc)':o.att>=GREEN?'var(--ac)':o.att>=YELLOW?'var(--warn)':'var(--bad)';
+    return `<div class="brow"><div class="bn">${esc(o.b)}<small>${o.n} flock${o.n===1?'':'s'} · ${fmtM(o.tep)} eggs</small></div>
+      <div class="bbar" role="img" aria-label="${pct(o.att)} of forecast"><i style="width:${w}%;background:${col}"></i><b title="100% of forecast"></b></div>
+      <div class="bp">${pct(o.att)}</div><div class="bx">HE rec. ${pct(o.rec)}${o.hd!=null?` · hen-day ${pct(o.hd)}`:''}</div></div>`}).join('')||'<p class="bnote">No flocks in this selection.</p>';
+  $('bnote').textContent='Bar = TEP actual as % of forecast (matched weeks); the black tick is 100%. Breed comes from the tab title or the Flocks tab.'+(DATA.extra?'':' Hen-day % appears once bird counts are recorded in the baseline template.');
+  // ---- HE classification
+  const CL=['Class A','Class B','Soiled'],sel=state.hecls==='ALL'?null:+state.hecls;
+  const ct=[0,0,0];let cw=0,ctep=0;const cm=new Map();
+  (DATA.cls||new Map()).forEach((o,k)=>{const ci=Math.floor(k/1000);if(!cset.has(ci))return;cw++;o.cl.forEach((v,i)=>ct[i]+=v||0);
+    const t=DATA.rows;const d=new Date(o.ws*DAY),key=d.getUTCFullYear()*12+d.getUTCMonth();const m=cm.get(key)||[0,0,0];o.cl.forEach((v,i)=>m[i]+=v||0);cm.set(key,m);});
+  const csum=ct[0]+ct[1]+ct[2];
+  const hasCls=csum>0;
+  $('clsTiles').innerHTML=CL.map((n,i)=>`<div class="panel clst${sel===i?' sel':''}" style="border-left-color:${['var(--ac)','var(--he)','var(--yolk)'][i]}"><h3>${n}</h3><div class="val">${hasCls?fmtM(ct[i]):'–'}</div><p>${hasCls?pct(ct[i]/csum)+' of classified HE':'Not recorded yet'}</p></div>`).join('');
+  $('clsDesc').textContent=hasCls?`Class A, Class B and Soiled hatching eggs across ${cw} flock-weeks with classification data${sel!=null?`. Showing ${CL[sel]} only; its share of HE is the line (right axis)`:''}.`:
+    (DATA.extra?'No classification yet. Fill HE_Class_A, HE_Class_B and HE_Soiled in Weekly_Log.':'No classification yet. Add columns titled "HE CLASS A", "HE CLASS B" and "SOILED" to each farm tab (same row as AGE FLOCK); HE total is used as-is, or computed as A + B + Soiled when blank.');
+  $('clsChartP').classList.toggle('hidden',!hasCls);
+  let ck=[...cm.keys()].sort((a,b)=>a-b);if(ck.length){const all=[];for(let q=ck[0];q<=ck[ck.length-1];q++)all.push(q);ck=all;}
+  const clsD={lab:ck.map(q=>new Date(Date.UTC(Math.floor(q/12),q%12,1)).toLocaleDateString('en-US',{month:'short',year:'2-digit',timeZone:'UTC'})),
+    v:[0,1,2].map(i=>ck.map(q=>cm.get(q)?cm.get(q)[i]:null)),share:sel==null?null:ck.map(q=>{const m=cm.get(q);const t=m?m[0]+m[1]+m[2]:0;return t?m[sel]/t*100:null;}),sel,has:hasCls};
+  // HE card follows the class filter
+  const heCard=sel==null||!hasCls?['Hatching eggs',g.a[1],g.f[1],fmtM,attH,badge(attH),'forecast',g.f[1]?`${snum(g.a[1]-g.f[1])} (${spct(attH-1)})`:'']:
+    [`Hatching eggs: ${CL[sel]}`,ct[sel],csum,fmtM,ct[sel]/csum,'<span class="status s-none">'+pct(ct[sel]/csum)+' of HE</span>','classified HE',''];
   // KPI bullets: [name, actual, reference, formatter, ratio, badgeHtml, refLabel, varText]
   const k=[
-    ['Hatching eggs',g.a[1],g.f[1],fmtM,attH,badge(attH),'forecast',g.f[1]?`${snum(g.a[1]-g.f[1])} (${spct(attH-1)})`:''],
+    heCard,
     ['HE recovery (HE ÷ TEP)',g.rec,HE_STD,v=>pct(v),g.rec==null?null:g.rec/HE_STD,rbadge(g.rec),'standard',g.rec==null?'':pts(g.rec-HE_STD)],
     ['Avg eggs per flock-week',avgA,avgF,fmt,avgF?avgA/avgF:null,badge(avgF?avgA/avgF:null),'forecast',avgF?`${snum(avgA-avgF)} (${spct(avgA/avgF-1)})`:''],
   ];
@@ -389,7 +522,8 @@ function render(){
     ['Total eggs produced (TEP)',g.f[0],g.a[0],'n',badge(attT)],['Hatching eggs (HE)',g.f[1],g.a[1],'n',badge(attH)],
     [`HE recovery % (vs ${pct(HE_STD)} standard)`,HE_STD,g.rec,'p',rbadge(g.rec)],['Avg eggs per flock-week',avgF,avgA,'n',badge(avgF?avgA/avgF:null)],
     ['Peak weekly TEP (single flock)',g.peakF,g.peakA,'n',badge(g.peakF?g.peakA/g.peakF:null)],['Production weeks (flock-weeks)',g.wkF,g.wkA,'n',badge(g.wkF?g.wkA/g.wkF:null)],
-    ['TEP incl. weeks with no forecast',g.uf,g.ua,'n','<span class="info">Info only</span>']];
+    ['TEP incl. weeks with no forecast',g.uf,g.ua,'n','<span class="info">Info only</span>'],
+    ...(hasCls?CL.map((n,i)=>[`HE ${n} (share of classified HE)`,null,ct[i]/csum,'p','<span class="info">Info only</span>']):[])];
   $('tBreak').querySelector('tbody').innerHTML=br.map(([n,f,a,t,b])=>{
     const ok=f&&a!=null,att=ok?a/f:null,v=ok?a-f:null;
     return `<tr><td>${n}</td><td>${t==='p'?pct(f):fmt(f)}</td><td>${t==='p'?pct(a):fmt(a)}</td><td class="${v>=0?'pos':'neg'}">${ok?(t==='p'?pts(v):snum(v)):'–'}</td><td class="${att>=1?'pos':'neg'}">${spct(att==null?null:att-1)}</td><td>${b}</td></tr>`}).join('');
@@ -397,7 +531,7 @@ function render(){
   const byC=new Map();rows.forEach(r=>{if(!byC.has(r[0]))byC.set(r[0],[]);byC.get(r[0]).push(r);});
   $('tCyc').querySelector('tbody').innerHTML=cyc.slice().sort((x,y)=>DATA.cycles[y].start-DATA.cycles[x].start).map(i=>{
     const c=DATA.cycles[i],a=agg(byC.get(i)||[]),t=a.f[0]?a.a[0]/a.f[0]:null,h=a.f[1]?a.a[1]/a.f[1]:null;
-    return `<tr class="click" tabindex="0" data-i="${i}"><td>${esc(c.id)}</td><td>${c.breed}</td><td>${c.status}</td><td>${dstr(c.start)}</td><td>${a.wkA}</td><td>${fmt(a.ua)}</td><td>${pct(t)} ${badge(t)}</td><td>${pct(h)} ${badge(h)}</td><td>${pct(a.rec)} ${rbadge(a.rec)}</td></tr>`}).join('')||'<tr><td colspan="9">No cycles match. Choose another farm or cycle.</td></tr>';
+    return `<tr class="click" tabindex="0" data-i="${i}"><td>${esc(c.id)}</td><td>${c.breed}</td><td>${c.status}</td><td>${dstr(c.start)}</td><td>${a.wkA}</td><td>${fmt(a.ua)}</td><td>${pct(t)} ${badge(t)}</td><td>${pct(h)} ${badge(h)}</td><td>${pct(a.rec)} ${rbadge(a.rec)}</td><td>${clsMix(i)}</td></tr>`}).join('')||'<tr><td colspan="10">No cycles match. Choose another farm or cycle.</td></tr>';
   // trend
   const mon=new Map();
   rows.forEach(r=>{if(r[3]!==0||!(r[4]>0)||r[5]==null)return;const d=new Date(r[2]*DAY),key=d.getUTCFullYear()*12+d.getUTCMonth();const o=mon.get(key)||{f:0,a:0};o.f+=r[4];o.a+=r[5];mon.set(key,o);});
@@ -418,7 +552,15 @@ function render(){
   const rw=[...Array(W+1)].map(()=>({t:0,h:0}));
   rows.forEach(r=>{if(r[3]===1&&r[5]!=null){const t=tepA.get(r[0]*1000+r[1]);if(t){rw[r[1]].t+=t;rw[r[1]].h+=r[5];}}});
   const rec=rw.slice(1).map(o=>o.t?o.h/o.t*100:null);
-  drawCharts({mLab,mF,mA,mV,rk,W,curve:[cv(0),cv(1),cv(2),cv(3)],rec});
+  const H=health(cset);
+  if(H){
+    const nr='Not recorded yet';
+    $('hHD').textContent=H.hd==null?nr:pct(H.hd);$('hHDn').textContent=H.hd==null?'Fill Hens_Start in Weekly_Log.':`TEP ÷ (hens × 7) over ${H.weeksH} flock-weeks`;
+    $('hMort').textContent=H.mortPct==null?nr:pct(H.mortPct,2);$('hMortn').textContent=H.mortPct==null?'Fill Hens_Housed in Flocks and mortality/culls in Weekly_Log.':`${fmt(H.mort)} birds of ${fmt(H.housed)} hens housed`;
+    $('hFeed').textContent=H.fpd==null?nr:H.fpd.toFixed(2)+' kg';$('hFeedn').textContent=H.fpd==null?'Fill Feed_Hen_kg in Weekly_Log.':`hen feed per 12 hatching eggs, ${H.weeksF} flock-weeks`;
+    $('hRejn').textContent=H.weeksR?`Rejected and floor eggs over ${H.weeksR} flock-weeks with reject data, as a share of total eggs in those weeks.`:'No reject data yet. Fill the Rej_… and Floor_Eggs columns in Weekly_Log to see why HE recovery falls short of '+pct(HE_STD)+'.';
+  }
+  drawCharts({mLab,mF,mA,mV,rk,W,curve:[cv(0),cv(1),cv(2),cv(3)],rec,H,cls:clsD});
 }
 function drawCharts(d){
   if(typeof Chart==='undefined'){['cTrend','cRank','cCurve','cRec'].forEach(id=>{const el=$(id);if(el)el.parentNode.innerHTML='<p class="desc">Charts could not load. Check the internet connection and reload.</p>'});return;}
@@ -452,12 +594,24 @@ function drawCharts(d){
       segment:{borderColor:c=>c.p1.parsed.y>=std-1e-9?css('--ac'):css('--bad')}}]},
     options:{animation:false,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>'Production week '+t[0].label,label:c=>`HE recovery ${c.raw==null?'–':c.raw.toFixed(1)+'%'} (standard ${std.toFixed(1)}%)`}}},
       scales:{x:{title:{display:true,text:'Production week'},ticks:{maxTicksLimit:14},grid:{display:false}},y:{suggestedMin:60,suggestedMax:100,ticks:{callback:v=>v+'%'}}}},plugins:[vline(std,'y')]});
+  if(d.cls&&d.cls.has){const cc=[css('--ac'),css('--he'),css('--yolk')],CLn=['Class A','Class B','Soiled'];
+    const ds=[0,1,2].filter(i=>d.cls.sel==null||d.cls.sel===i).map(i=>({type:'bar',label:CLn[i],data:d.cls.v[i],backgroundColor:cc[i],stack:'he',order:1}));
+    if(d.cls.share)ds.unshift({type:'line',label:CLn[d.cls.sel]+' % of HE',data:d.cls.share,yAxisID:'y2',borderColor:css('--ink'),backgroundColor:css('--ink'),borderWidth:2,pointRadius:2,tension:.25,order:0});
+    $('clsChartT').textContent=d.cls.sel==null?'Monthly HE by class (stacked)':`Monthly ${CLn[d.cls.sel]} eggs and share of HE`;
+    upd('cCls',{data:{labels:d.cls.lab,datasets:ds},options:{animation:false,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.dataset.yAxisID==='y2'?(c.raw==null?'–':c.raw.toFixed(1)+'%'):fmt(c.raw)}`}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:kfmt}},...(d.cls.share?{y2:{position:'right',grid:{display:false},min:0,max:100,ticks:{callback:v=>v+'%'}}}:{})}}});}
+  if(d.H&&$('cRej')){const tot=d.H.tepRej;
+    upd('cRej',{type:'bar',data:{labels:REJ.map(r=>r[1]),datasets:[{label:'Eggs',data:d.H.rej,backgroundColor:css('--bad'),borderRadius:3,barPercentage:.7}]},
+      options:{animation:false,indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw)} eggs${tot?` (${(c.raw/tot*100).toFixed(2)}% of TEP)`:''}`}}},
+        scales:{x:{beginAtZero:true,ticks:{callback:v=>v>=1e3?(v/1e3)+'k':v}},y:{grid:{display:false}}}}});}
 }
-function foot(){$('foot').textContent=`Source: ${inAppsScript()||CFG.APPS_SCRIPT_URL?'Google Sheet (all tabs via Apps Script)':'Google Sheet published CSV'}. Cycle = the title at the top of each farm tab. Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
+function foot(){$('foot').textContent=`Source: ${inAppsScript()||CFG.APPS_SCRIPT_URL?'Google Sheet (all tabs via Apps Script)':'Google Sheet published CSV'}. ${DATA.extra?'Cycle = Cycle_Name in the Flocks tab.':'Cycle = the title at the top of each farm tab.'} Variance and attainment use matched weeks only (weeks with both a forecast and an actual); HE recovery compares actual HE ÷ TEP with the ${pct(HE_STD)} standard.${DATA.skipped.length?' Not loaded: '+DATA.skipped.join('; ')+'.':''}`;}
 // events
+$('hecls').addEventListener('change',e=>{state.hecls=e.target.value;render();});
 $('farm').addEventListener('change',e=>{state.farm=e.target.value;state.cycle='ALL';buildCycles();render();});
 $('cycle').addEventListener('change',e=>{state.cycle=e.target.value;render();});
-$('reset').addEventListener('click',()=>{state={farm:'ALL',cycle:'ALL'};buildFilters();render();});
+$('reset').addEventListener('click',()=>{state={farm:'ALL',cycle:'ALL',hecls:'ALL'};buildFilters();render();});
 const openRow=tr=>{if(!tr)return;const c=DATA.cycles[+tr.dataset.i];state.farm=c.farm;state.cycle=c.id;buildFilters();render();window.scrollTo({top:0,behavior:'smooth'});};
 $('tCyc').addEventListener('click',e=>openRow(e.target.closest('tr.click')));
 $('tCyc').addEventListener('keydown',e=>{if(e.key==='Enter')openRow(e.target.closest('tr.click'));});
