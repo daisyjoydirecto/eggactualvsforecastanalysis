@@ -103,11 +103,11 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
 .seg button{font:inherit;font-size:12.5px;font-weight:600;border:0;background:transparent;color:var(--muted);padding:5px 12px;cursor:pointer;border-radius:0}
 .seg button[aria-pressed="true"]{background:var(--ac);color:#fff}
-@media (max-width:900px){.hero2{grid-template-columns:1fr}}
+@media (max-width:900px){.hero2{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:420px){.kgrid{grid-template-columns:1fr}}
 .breeds{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
 .breeds h3{margin:0 0 8px;font-size:14px;font-weight:600;color:var(--muted)}
-.brow{display:grid;grid-template-columns:150px minmax(60px,1fr) 56px 160px;gap:4px 10px;align-items:center;padding:3px 0;border-bottom:1px solid var(--line);font-size:12px}
+.brow{display:grid;grid-template-columns:minmax(0,150px) minmax(50px,1fr) 56px minmax(0,160px);gap:4px 10px;align-items:center;padding:3px 0;border-bottom:1px solid var(--line);font-size:12px}
 .brow:last-child{border-bottom:0}
 .brow .bn{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brow .bn small{font-weight:400;color:var(--muted);font-size:11px}
 .brow .bbar{position:relative;height:6px;background:var(--bg);border-radius:3px}
@@ -129,14 +129,15 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 .htile p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
 @media (max-width:900px){.hgrid{grid-template-columns:1fr}}
 .mast{position:sticky;top:0;z-index:20;background:#0F0F0F;color:#fff;border-bottom:3px solid #8DB600;padding:env(safe-area-inset-top,0px) 0 0;margin-top:calc(-1 * env(safe-area-inset-top,0px))}
-.mast .in{max-width:1280px;margin:0 auto;padding:0 clamp(14px,3vw,32px);height:46px;display:flex;align-items:center;gap:14px}
+.mast .in{max-width:1600px;margin:0 auto;padding:4px clamp(12px,2vw,28px);min-height:46px;display:flex;align-items:center;gap:12px}
 .mast .kicker{font-family:"Libre Baskerville",Georgia,serif;font-size:10.5px;letter-spacing:.18em;color:#8DB600;margin:0;white-space:nowrap}
 .mast h1{font-family:"Libre Baskerville",Georgia,serif;font-size:16px;font-weight:700;letter-spacing:0;color:#fff;margin:0;line-height:1.2;white-space:nowrap}
 .mast .sep{width:1px;height:18px;background:#3A3A3A;flex:0 0 auto}
-.mast .live{font-size:12px;color:#BDBDBD;margin:0 0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mast .live{font-size:12px;color:#BDBDBD;margin:0 0 0 auto;white-space:nowrap;min-width:0;line-height:1.3}
 .mast .dot{background:#777}.mast .dot.on{background:#8DB600;box-shadow:0 0 0 3px rgba(141,182,0,.25)}.mast .dot.err{background:#E0574C}
-@media (max-width:1100px){.mast .kicker,.mast .sep{display:none}}
-@media (max-width:640px){.mast h1{font-size:14px}.mast .live{font-size:11px}.refresh span{display:none}.refresh{padding:6px 9px}}
+@media (max-width:1250px){.mast .kicker,.mast .sep{display:none}}
+@media (max-width:980px){.mast .live{white-space:normal;max-width:190px;font-size:11.5px}.navbtn span,.refresh span{display:none}.navbtn,.refresh{padding:6px 9px}}
+@media (max-width:640px){.mast h1{font-size:13.5px;white-space:normal}.mast .live{font-size:10.5px;max-width:120px}}
 .navbtn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:"Libre Baskerville",Georgia,serif;font-size:12.5px;font-weight:700;color:#8DB600;background:transparent;border:1px solid #8DB600;padding:6px 12px;text-decoration:none;white-space:nowrap}
 .navbtn:hover{background:rgba(141,182,0,.15)}
 .navbtn svg{width:13px;height:13px}
@@ -151,7 +152,7 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--fc);margin-right:4px;vertical-align:1px}
 .dot.on{background:var(--ok);box-shadow:0 0 0 3px var(--okbg)}.dot.err{background:var(--bad)}
 .skel .big,.skel .val{opacity:.35}
-@media (max-width:900px){.hero,.grid2{grid-template-columns:1fr}.chartbox{height:300px}.chartbox.tall{height:360px}.actions{margin-left:0}}
+@media (max-width:900px){.hero,.grid2{grid-template-columns:minmax(0,1fr)}.chartbox{height:300px}.chartbox.tall{height:360px}.actions{margin-left:0}}
 @media (prefers-reduced-motion:reduce){.bullet .bar{transition:none}}
 </style>
 </head>
@@ -485,7 +486,7 @@ async function refresh(){
     }
     lastOk=new Date();$('stdTxt').textContent=pct(HE_STD);setBandTxt();
     $('health').classList.toggle('hidden',!DATA.extra);
-    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
+    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet, refresh every ${CFG.REFRESH_MINUTES} mins.`;$('live').title=`Last refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
     buildFilters();render();foot();
     if(asWarn)$('live').innerHTML+=` <b style="color:#E8B53A" title="${esc(asWarn)}">Apps Script link failed; using the published sheet instead.</b>`;
     if(publishedFallback&&!DATA.extra){
