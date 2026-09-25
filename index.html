@@ -137,6 +137,10 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
 .mast .dot{background:#777}.mast .dot.on{background:#8DB600;box-shadow:0 0 0 3px rgba(141,182,0,.25)}.mast .dot.err{background:#E0574C}
 @media (max-width:1100px){.mast .kicker,.mast .sep{display:none}}
 @media (max-width:640px){.mast h1{font-size:14px}.mast .live{font-size:11px}.refresh span{display:none}.refresh{padding:6px 9px}}
+.navbtn{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;font-family:"Libre Baskerville",Georgia,serif;font-size:12.5px;font-weight:700;color:#8DB600;background:transparent;border:1px solid #8DB600;padding:6px 12px;text-decoration:none;white-space:nowrap}
+.navbtn:hover{background:rgba(141,182,0,.15)}
+.navbtn svg{width:13px;height:13px}
+@media (max-width:640px){.navbtn span{display:none}.navbtn{padding:6px 9px}}
 .refresh{flex:0 0 auto;font-family:"Libre Baskerville",Georgia,serif;font-size:12.5px;font-weight:700;color:#0F0F0F;background:#8DB600;border:1px solid #8DB600;border-radius:0;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .refresh:hover{background:#A3CC14;border-color:#A3CC14}
 .refresh:disabled{opacity:.6;cursor:progress}
@@ -156,6 +160,7 @@ footer{margin-top:34px;color:var(--muted);font-size:13px;border-top:1px solid va
   <p class="kicker">M. MONTESCLAROS FARMS INC.</p><span class="sep"></span>
   <h1>Farm Production: Forecast vs Actual</h1>
   <div class="live" id="live" aria-live="polite"><span class="dot"></span> Connecting to Google Sheet…</div>
+  <a class="navbtn" href="https://daisyjoydirecto.github.io/hatchability-update/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg><span>Hatchability update</span></a>
   <button id="load" class="refresh" type="button" title="Refresh data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><span>Refresh data</span></button>
 </div></header>
 <div class="wrap">
@@ -480,7 +485,7 @@ async function refresh(){
     }
     lastOk=new Date();$('stdTxt').textContent=pct(HE_STD);setBandTxt();
     $('health').classList.toggle('hidden',!DATA.extra);
-    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet${DATA.extra?' (baseline template)':''}: ${DATA.cycles.length} ${DATA.extra?'flock':'tab'}${DATA.cycles.length===1?'':'s'}, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
+    $('live').innerHTML=`<span class="dot on"></span> Live from Google Sheet, refreshed ${lastOk.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}. Updates every ${CFG.REFRESH_MINUTES} min.`;
     buildFilters();render();foot();
     if(asWarn)$('live').innerHTML+=` <b style="color:#E8B53A" title="${esc(asWarn)}">Apps Script link failed; using the published sheet instead.</b>`;
     if(publishedFallback&&!DATA.extra){
